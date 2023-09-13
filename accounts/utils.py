@@ -39,4 +39,7 @@ def jti_maker(request, user_id):
     # return f"{uuid4().hex}"
 
 
-
+def decode_jwt(token):
+    payload = jwt.decode(
+        token, settings.SECRET_KEY, algorithms=['HS256'])
+    return payload
