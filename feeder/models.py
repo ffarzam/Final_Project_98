@@ -44,3 +44,19 @@ class Channel(models.Model):
         return f'{self.title}'
 
 
+class Episode(models.Model):
+    title = models.CharField(max_length=250)
+    subtitle = models.TextField(null=True, blank=True)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    description = models.TextField()
+    published_date = models.DateTimeField()
+    guid = models.TextField()
+    audio_file_url = models.URLField()
+    image_file_url = models.URLField(null=True, blank=True)
+    duration = models.CharField(max_length=25, null=True, blank=True)
+    explicit = models.CharField(max_length=10, null=True, blank=True)
+
+    def __str__(self):
+        return f'Podcast: {self.channel} || Episode: {self.title}'
+
+
