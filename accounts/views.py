@@ -50,3 +50,32 @@ class UserLogin(APIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
+class RefreshToken(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+
+        payload = request.auth
+        jti = payload["jti"]
+        caches['auth'].delete(jti)
+
+        user_identifier = payload["user_identifier"]
+        user = find_user(user_identifier)
+        if user is None:
+            raise exceptions.AuthenticationFailed('User not found')
+
+        if not user.is_active:
+            raise exceptions.AuthenticationFailed('user is inactive')
+
+        jti = jti_maker(request, user.id)
+        access_token = generate_access_token(user.id, jti)
+        refresh_token = generate_refresh_token(user.id, jti, settings.REDIS_AUTH_TTL)
+        caches['auth'].set(jti, 0, timeout=settings.REDIS_AUTH_TTL, version=None)
+
+        data = {
+            "access": access_token,
+            "refresh": refresh_token
+        }
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
