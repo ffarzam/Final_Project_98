@@ -42,7 +42,7 @@ class CustomJWTAuthentication(BaseAuthentication):
             raise exceptions.PermissionDenied(
                 'Expired refresh token, please login again.')
         except Exception as e:
-            raise exceptions.NotAcceptable(str(e))
+            raise exceptions.ParseError(str(e))
 
     @staticmethod
     def get_user_from_payload(payload):
@@ -86,8 +86,8 @@ class CustomJWTAuthentication(BaseAuthentication):
             return payload
         except jwt.ExpiredSignatureError:
             raise exceptions.NotAuthenticated('Access token expired')
-        except jwt.InvalidSignatureError as e:
-            raise exceptions.NotAcceptable(str(e))
+        except Exception as e:
+            raise exceptions.ParseError(str(e))
 
 
 class AuthBackend(ModelBackend):
