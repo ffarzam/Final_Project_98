@@ -28,3 +28,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserLoginSerializer(serializers.Serializer):
+    user_identifier = serializers.CharField()
+    password = serializers.CharField()
