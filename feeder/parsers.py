@@ -167,5 +167,12 @@ def channel_parser_mapper(arg):
     return choice[arg.lower()]
 
 
+def items_parser_mapper(arg):
+    choice = {
+        "item_parser_one": item_parser_one,
+        "item_parser_two": item_parser_two
+
+    }
+    return choice[arg.lower()]
 
 
