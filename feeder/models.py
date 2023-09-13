@@ -60,3 +60,14 @@ class Episode(models.Model):
         return f'Podcast: {self.channel} || Episode: {self.title}'
 
 
+class News(models.Model):
+    title = models.CharField(max_length=50)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    link = models.URLField()
+    source = models.URLField(null=True, blank=True)
+    guid = models.CharField(max_length=255)
+    published_date = models.DateTimeField(null=True, blank=True)
+    image_file_url = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        return f'Podcast: {self.channel} || News: {self.title}'
