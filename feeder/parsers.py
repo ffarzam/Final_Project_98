@@ -118,3 +118,39 @@ def item_parser_one(xml_link):
         yield item_info
 
 
+def item_parser_two(xml_link):
+    channel, namespaces = get_info(xml_link)
+
+    for item in channel.iter("item"):
+        title = item.find("title").text if item.find("title") is not None else None
+
+        link = item.find("link").text if item.find("link") is not None else None
+
+        published_date = item_parser_two_string_to_date_time_convertor(item.find("pubDate").text) \
+            if item.find("pubDate") is not None \
+            else None
+
+        source = item.find("source").attrib.get("url") if item.find("source") is not None else None
+
+        guid = item.find("guid").text if item.find("guid") is not None else None
+
+        image_file_url = item.find("media:content", namespaces=namespaces).attrib.get("url") \
+            if item.find("media:content", namespaces=namespaces) is not None \
+            else None
+
+        if guid is None:
+            continue
+
+        item_info = {
+            "title": title,
+            "link": link,
+            "published_date": published_date,
+            "source": source,
+            "guid": guid,
+            "image_file_url": image_file_url,
+        }
+
+        yield item_info
+
+
+
