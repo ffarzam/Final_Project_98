@@ -90,3 +90,28 @@ class CustomJWTAuthentication(BaseAuthentication):
             raise exceptions.NotAcceptable(str(e))
 
 
+class AuthBackend(ModelBackend):
+
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        user = find_user(username)
+        if user.check_password(password) and user.is_active:
+            return user
+        else:
+            return None
+
+    def get_user(self, user_id):
+        try:
+            return CustomUser.objects.get(pk=user_id)
+        except CustomUser.DoesNotExist:
+            return
+
+
+def find_user(user_identifier):
+    try:
+        user = CustomUser.objects.get(username=user_identifier)
+    except CustomUser.DoesNotExist:
+        try:
+            user = CustomUser.objects.get(email=user_identifier)
+        except CustomUser.DoesNotExist:
+            return None
+    return user
