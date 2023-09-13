@@ -18,12 +18,7 @@ class CustomJWTAuthentication(BaseAuthentication):
 
         refresh_token = request.data.get("refresh_token")
 
-        payload = self.get_payload_from_refresh_token(refresh_token)
-
-        user = self.get_user_from_payload(payload)
-
-        # if jti not in map(lambda x: x.decode("utf8"), redis_instance.keys("*")):
-        self.validate_refresh_token(payload)
+        self.validate_refresh_token(refresh_token)
 
         authorization_header = self.get_authorization_header(request)
 
@@ -31,13 +26,16 @@ class CustomJWTAuthentication(BaseAuthentication):
 
         payload = self.get_payload_from_access_token(authorization_header)
 
+        self.validate_jti_token(payload)
+
+        user = self.get_user_from_payload(payload)
+
         return user, payload
 
     @staticmethod
-    def get_payload_from_refresh_token(refresh_token):
+    def validate_refresh_token(refresh_token):
         try:
-            payload = decode_jwt(refresh_token)
-            return payload
+            decode_jwt(refresh_token)
         except jwt.ExpiredSignatureError:
             raise exceptions.PermissionDenied(
                 'Expired refresh token, please login again.')
@@ -53,7 +51,7 @@ class CustomJWTAuthentication(BaseAuthentication):
         try:
             user = CustomUser.objects.get(id=user_id)
         except:
-            raise exceptions.PermissionDenied('User Not Found')
+            raise exceptions.NotFound('User Not Found')
 
         if not user.is_active:
             raise exceptions.PermissionDenied('User is inactive')
@@ -61,7 +59,7 @@ class CustomJWTAuthentication(BaseAuthentication):
         return user
 
     @staticmethod
-    def validate_refresh_token(payload):
+    def validate_jti_token(payload):
         jti = payload.get('jti')
         if jti not in caches['auth'].keys('*'):  # ???
             raise exceptions.PermissionDenied(
@@ -70,13 +68,13 @@ class CustomJWTAuthentication(BaseAuthentication):
     def get_authorization_header(self, request):
         authorization_header = request.headers.get(self.authentication_header_name)
         if not authorization_header:
-            raise exceptions.PermissionDenied('Authorization Header was not set')
+            raise exceptions.NotFound('Authorization Header was not set')
         return authorization_header
 
     def check_prefix(self, authorization_header):
         prefix = authorization_header.split(' ')[0]
         if prefix != self.authentication_header_prefix:
-            raise exceptions.PermissionDenied('Token prefix missing')
+            raise exceptions.NotFound('Token prefix missing')
 
     @staticmethod
     def get_payload_from_access_token(authorization_header):
