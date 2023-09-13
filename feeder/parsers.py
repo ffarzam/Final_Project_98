@@ -153,4 +153,10 @@ def item_parser_two(xml_link):
         yield item_info
 
 
+def item_parser_two_string_to_date_time_convertor(pub_dat_str):
+    pub_dat = pub_dat_str.replace("T", " ").replace("Z", "")
+    pub_dat = datetime.strptime(pub_dat, "%Y-%m-%d %H:%M:%S")
+    return pub_dat.replace(tzinfo=pytz.UTC)
+
+
 
