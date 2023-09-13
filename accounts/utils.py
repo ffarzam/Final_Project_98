@@ -20,4 +20,18 @@ def generate_access_token(request, user_id, jti):
     return access_token
 
 
+def generate_refresh_token(request, user_id, jti, ttl):
+    refresh_token_payload = {
+        "token_type": "refresh",
+        'user_id': user_id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=ttl),
+        'iat': datetime.datetime.utcnow(),
+        'jti': jti,
+
+    }
+    refresh_token = jwt.encode(
+        refresh_token_payload, settings.SECRET_KEY, algorithm='HS256')
+    return refresh_token
+
+
 
