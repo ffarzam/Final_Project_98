@@ -159,4 +159,13 @@ def item_parser_two_string_to_date_time_convertor(pub_dat_str):
     return pub_dat.replace(tzinfo=pytz.UTC)
 
 
+def channel_parser_mapper(arg):
+    choice = {
+        "channel_parser_one": channel_parser_one,
+
+    }
+    return choice[arg.lower()]
+
+
+
 
