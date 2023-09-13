@@ -94,3 +94,7 @@ class LogoutView(APIView):
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class Status(APIView):
+
+    def get(self, request):
+        return Response({"message": "Server is running"}, status=status.HTTP_200_OK)
