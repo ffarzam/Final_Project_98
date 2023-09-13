@@ -34,4 +34,9 @@ def generate_refresh_token(request, user_id, jti, ttl):
     return refresh_token
 
 
+def jti_maker(request, user_id):
+    return f"{uuid4().hex} || {user_id} || {request.META['OS']} || {request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
+    # return f"{uuid4().hex}"
+
+
 
