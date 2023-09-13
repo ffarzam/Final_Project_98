@@ -68,4 +68,53 @@ def channel_parser_one(xml_link):
     return channel_info
 
 
+def item_parser_one(xml_link):
+    channel, namespaces = get_info(xml_link)
+
+    for item in channel.iter("item"):
+        title = item.find("title").text if item.find("title") is not None else None
+
+        subtitle = item.find("subtitle").text if item.find("subtitle") is not None else None
+
+        description = item.find("description").text if item.find("description") is not None else None
+
+        published_date = datetime.strptime(item.find("pubDate").text, "%a, %d %b %Y %H:%M:%S %z") \
+            if item.find("pubDate") is not None \
+            else None
+
+        guid = item.find("guid").text if item.find("guid") is not None else None
+
+        image_file_url = item.find("itunes:image", namespaces=namespaces).attrib.get("href") \
+            if item.find("itunes:image", namespaces=namespaces) is not None \
+            else None
+
+        audio_file_url = item.find("enclosure").attrib.get("url") \
+            if item.find("enclosure") is not None \
+            else None
+
+        duration = item.find("itunes:duration", namespaces=namespaces).text \
+            if item.find("itunes:duration", namespaces=namespaces) is not None \
+            else None
+
+        explicit = item.find("itunes:explicit", namespaces=namespaces).text \
+            if item.find("itunes:explicit", namespaces=namespaces) is not None \
+            else None
+
+        if audio_file_url is None or title is None or guid is None:
+            continue
+
+        item_info = {
+            "title": title,
+            "subtitle": subtitle,
+            "published_date": published_date,
+            "description": description,
+            "guid": guid,
+            "audio_file_url": audio_file_url,
+            "duration": duration,
+            "explicit": explicit,
+            "image_file_url": image_file_url,
+        }
+
+        yield item_info
+
 
