@@ -176,3 +176,10 @@ def items_parser_mapper(arg):
     return choice[arg.lower()]
 
 
+def item_model_mapper(arg):
+    choice = {
+        "Episode": Episode,
+        "News": News,
+    }
+    return choice[arg.capitalize()]
+
