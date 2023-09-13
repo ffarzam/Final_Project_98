@@ -13,3 +13,12 @@ class Like(models.Model):
     content_object = GenericForeignKey()
 
 
+class Comment(models.Model):
+    content = models.TextField()
+    comment_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+
+
