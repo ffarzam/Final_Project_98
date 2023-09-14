@@ -111,7 +111,7 @@ python manage.py runserver
 
 
 ### Contributing
-We welcome contributions to the Caffe Shop Django project. If you'd like to contribute, please follow these steps:
+We welcome contributions to the RSS Feed Django project. If you'd like to contribute, please follow these steps:
 
 Fork the repository on GitHub.
 
