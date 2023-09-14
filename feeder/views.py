@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from accounts.authentication import CustomJWTAuthentication
+from accounts.authentication import AccessTokenAuthentication
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
@@ -11,7 +11,7 @@ from Permissions import IsSuperuser
 
 
 class CreateChannelAndItems(APIView):
-    authentication_classes = (CustomJWTAuthentication,)
+    authentication_classes = (AccessTokenAuthentication,)
     permission_classes = (IsSuperuser,)
 
     def post(self, request):
@@ -44,7 +44,7 @@ class CreateChannelAndItems(APIView):
 
 
 class UpdateChannelAndItems(APIView):
-    authentication_classes = (CustomJWTAuthentication,)
+    authentication_classes = (AccessTokenAuthentication,)
     permission_classes = (IsSuperuser,)
 
     def post(self, request):

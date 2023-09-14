@@ -1,13 +1,12 @@
+from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import exceptions
 from .serializers import UserRegisterSerializer, UserLoginSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .authentication import AuthBackend, CustomJWTAuthentication, find_user
-from .utils import generate_refresh_token, generate_access_token, jti_maker
-from django.conf import settings
-from django.core.cache import cache, caches
+from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
+from .utils import generate_refresh_token, generate_access_token, jti_maker, jti_parser
+from django.core.cache import caches
 
 
 # Create your views here.
@@ -33,13 +32,13 @@ class UserLogin(APIView):
         serializer.is_valid(raise_exception=True)
         user_identifier = serializer.validated_data.get('user_identifier')
         password = serializer.validated_data.get('password')
-        user = AuthBackend().authenticate(request, username=user_identifier, password=password)
+        user = authenticate(request, user_identifier=user_identifier, password=password)
         if user is None:
             return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
         jti = jti_maker(request, user.id)
         access_token = generate_access_token(user.id, jti)
-        refresh_token = generate_refresh_token(user.id, jti, settings.REDIS_AUTH_TTL)
+        refresh_token = generate_refresh_token(user.id, jti)
 
         caches['auth'].set(jti, 0)
 
@@ -51,26 +50,20 @@ class UserLogin(APIView):
 
 
 class RefreshToken(APIView):
+    authentication_classes = (RefreshTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-
+        user = request.user
         payload = request.auth
+
         jti = payload["jti"]
         caches['auth'].delete(jti)
 
-        user_identifier = payload["user_identifier"]
-        user = find_user(user_identifier)
-        if user is None:
-            raise exceptions.AuthenticationFailed('User not found')
-
-        if not user.is_active:
-            raise exceptions.AuthenticationFailed('user is inactive')
-
         jti = jti_maker(request, user.id)
         access_token = generate_access_token(user.id, jti)
-        refresh_token = generate_refresh_token(user.id, jti, settings.REDIS_AUTH_TTL)
-        caches['auth'].set(jti, 0, timeout=settings.REDIS_AUTH_TTL, version=None)
+        refresh_token = generate_refresh_token(user.id, jti)
+        caches['auth'].set(jti, 0, version=None)
 
         data = {
             "access": access_token,
@@ -80,7 +73,7 @@ class RefreshToken(APIView):
 
 
 class LogoutView(APIView):
-    authentication_classes = (CustomJWTAuthentication,)
+    authentication_classes = (AccessTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
@@ -89,12 +82,42 @@ class LogoutView(APIView):
             jti = payload["jti"]
             caches['auth'].delete(jti)
 
-            return Response({"message": "Successful Logout"}, status=status.HTTP_200_OK)
+            return Response({"message": True}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class Status(APIView):
+class CheckAllActiveLogin(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        return Response({"message": "Server is running"}, status=status.HTTP_200_OK)
+        data = []
+
+        for jti in caches['auth'].keys('*'):
+            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            if request.user.id == int(user_id):
+                data.append({
+                    "raw_jti": raw_jti,
+                    "user_id": user_id,
+                    "OS": OS,
+                    "user_agent": user_agent,
+                    "OS_accounts": OS_accounts,
+                })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class LogoutAll(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        jti_list = caches['auth'].keys('*')
+
+        for jti in jti_list:
+            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            if request.user.id == int(user_id):
+                caches['auth'].delete(jti)
+
+        return Response({"message": "All accounts logged out"}, status=status.HTTP_200_OK)

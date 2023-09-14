@@ -9,9 +9,10 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-from datetime import timedelta
+import os
 from pathlib import Path
-
+from dotenv import load_dotenv
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(7_x4tb-vue%)na-0uptqs7fs5xvv#zy-m5#jm)-_wm6zd_pdl'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -77,13 +78,23 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('NAME'),
+            'HOST': os.environ.get('HOST'),
+            'PORT': os.environ.get('PORT'),
+            'USER': os.environ.get('USER'),
+            'PASSWORD': os.environ.get('PASSWORD')
+        }
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -138,17 +149,16 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-
-
 SPECTACULAR_SETTINGS = {
     'TITLE': 'RSS Feed Aggregator API',
     'VERSION': '1.0.0',
 }
-
+ACCESS_TOKEN_TTL = 60 * 60 * 24 * 1  # 1 Day
+REFRESH_TOKEN_TTL = 60 * 60 * 24 * 14  # 14 Day
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = 6379
 REDIS_DEFAULT_TTL = 60 * 60 * 24 * 14  # 14 Days
-REDIS_AUTH_TTL = 60 * 15  # 15 Minutes
+REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 1 Day
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -170,5 +180,5 @@ CACHES = {
 
 }
 
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# SESSION_CACHE_ALIAS = "default"
