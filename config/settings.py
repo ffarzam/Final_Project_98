@@ -160,10 +160,18 @@ REDIS_PORT = 6379
 REDIS_DEFAULT_TTL = 60 * 60 * 24 * 14  # 14 Days
 REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 1 Day
 CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+        'TIMEOUT': REDIS_DEFAULT_TTL,
+        # 'OPTIONS': {
+        #     'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        # },
+    },
 
     'auth': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/2',
         'TIMEOUT': REDIS_AUTH_TTL,
         # 'OPTIONS': {
         #     'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -172,3 +180,5 @@ CACHES = {
 
 }
 
+# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# SESSION_CACHE_ALIAS = "default"
