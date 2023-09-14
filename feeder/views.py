@@ -6,6 +6,9 @@ from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
 
+from .serializer import ChannelListSerializer
+from .utils import item_serializer_mapper
+
 
 # Create your views here.
 
@@ -82,3 +85,27 @@ class UpdateChannelAndItems(APIView):
             return Response({"Message": "Channel Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
 
         return Response({"Message": "No Link Was Found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ChannelList(APIView):
+
+    def get(self, request):
+        all_channels = Channel.objects.all()
+        ser_data = ChannelListSerializer(all_channels, many=True)
+        return Response(ser_data.data, status=status.HTTP_200_OK)
+
+
+class ItemsList(APIView):
+    def get(self, request, xml_link_id):
+        xml_link_obj = XmlLink.objects.get(id=xml_link_id)
+        channel = Channel.objects.get(xml_link=xml_link_obj.id)
+        ser_channel_data = ChannelListSerializer(channel)
+        ItemClass = item_model_mapper(xml_link_obj.rss_type.name)
+        all_items = ItemClass.objects.all()
+        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
+        ser_items_data = ItemSerializer(all_items, many=True)
+        data = {
+            "channel": ser_channel_data.data,
+            "items": ser_items_data.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
