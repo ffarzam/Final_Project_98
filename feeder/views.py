@@ -95,3 +95,17 @@ class ChannelList(APIView):
         return Response(ser_data.data, status=status.HTTP_200_OK)
 
 
+class ItemsList(APIView):
+    def get(self, request, xml_link_id):
+        xml_link_obj = XmlLink.objects.get(id=xml_link_id)
+        channel = Channel.objects.get(xml_link=xml_link_obj.id)
+        ser_channel_data = ChannelListSerializer(channel)
+        ItemClass = item_model_mapper(xml_link_obj.rss_type.name)
+        all_items = ItemClass.objects.all()
+        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
+        ser_items_data = ItemSerializer(all_items, many=True)
+        data = {
+            "channel": ser_channel_data.data,
+            "items": ser_items_data.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
