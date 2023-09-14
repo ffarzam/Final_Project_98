@@ -15,4 +15,7 @@ class NewsListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
+class EpisodeListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Episode
+        fields = "__all__"
