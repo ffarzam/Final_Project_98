@@ -35,7 +35,7 @@ class Channel(models.Model):
     last_update = models.DateTimeField(null=True, blank=True)
     description = models.TextField()
     language = models.CharField(max_length=25)
-    image_file_url = models.URLField(null=True, blank=True)
+    image_file_url = models.URLField(max_length=500, null=True, blank=True)
     author = models.TextField(null=True, blank=True)
     owner = models.CharField(max_length=250, null=True, blank=True)
     owner_email = models.EmailField(null=True, blank=True)
@@ -51,8 +51,8 @@ class Episode(models.Model):
     description = models.TextField()
     published_date = models.DateTimeField()
     guid = models.TextField()
-    audio_file_url = models.URLField()
-    image_file_url = models.URLField(null=True, blank=True)
+    audio_file_url = models.URLField(max_length=500)
+    image_file_url = models.URLField(max_length=500, null=True, blank=True)
     duration = models.CharField(max_length=25, null=True, blank=True)
     explicit = models.CharField(max_length=10, null=True, blank=True)
 
@@ -61,13 +61,13 @@ class Episode(models.Model):
 
 
 class News(models.Model):
-    title = models.CharField(max_length=50)
+    title = models.CharField(max_length=500)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     link = models.URLField()
     source = models.URLField(null=True, blank=True)
     guid = models.CharField(max_length=255)
     published_date = models.DateTimeField(null=True, blank=True)
-    image_file_url = models.URLField(null=True, blank=True)
+    image_file_url = models.URLField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return f'Podcast: {self.channel} || News: {self.title}'
