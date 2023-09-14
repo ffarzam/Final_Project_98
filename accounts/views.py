@@ -73,7 +73,7 @@ class RefreshToken(APIView):
 
 
 class LogoutView(APIView):
-    authentication_classes = (AccessTokenAuthentication,)
+    authentication_classes = (RefreshTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
