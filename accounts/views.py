@@ -87,3 +87,24 @@ class LogoutView(APIView):
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CheckAllActiveLogin(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        data = []
+
+        for jti in caches['auth'].keys('*'):
+            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            if request.user.id == int(user_id):
+                data.append({
+                    "raw_jti": raw_jti,
+                    "user_id": user_id,
+                    "OS": OS,
+                    "user_agent": user_agent,
+                    "OS_accounts": OS_accounts,
+                })
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
