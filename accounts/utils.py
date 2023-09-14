@@ -33,8 +33,7 @@ def jti_maker(request, user_id):
 
 
 def decode_jwt(token):
-    payload = jwt.decode(
-        token, settings.SECRET_KEY, algorithms=['HS256'])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
     return payload
 
 
@@ -43,3 +42,5 @@ def encode_jwt(payload):
     return token
 
 
+def jti_parser(jti):
+    return jti.split(" || ")
