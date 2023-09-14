@@ -108,3 +108,16 @@ class CheckAllActiveLogin(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class LogoutAll(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        jti_list = caches['auth'].keys('*')
+
+        for jti in jti_list:
+            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            if request.user.id == int(user_id):
+                caches['auth'].delete(jti)
+
+        return Response({"message": "All accounts logged out"}, status=status.HTTP_200_OK)
