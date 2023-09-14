@@ -116,8 +116,25 @@ class LogoutAll(APIView):
         jti_list = caches['auth'].keys('*')
 
         for jti in jti_list:
-            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            raw_jti, user_id, _, _, _ = jti_parser(jti)
             if request.user.id == int(user_id):
                 caches['auth'].delete(jti)
 
         return Response({"message": "All accounts logged out"}, status=status.HTTP_200_OK)
+
+
+class SelectedLogout(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        jti_list = caches['auth'].keys('*')
+
+        input_raw_jti = request.data.get("raw_jti")
+
+        for jti in jti_list:
+            raw_jti, user_id, _, _, _ = jti_parser(jti)
+            if request.user.id == int(user_id) and input_raw_jti == raw_jti:
+                caches['auth'].delete(jti)
+
+        return Response({"message": True}, status=status.HTTP_200_OK)
