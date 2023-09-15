@@ -14,9 +14,10 @@ from django.core.cache import caches
 
 class UserRegister(APIView):
     permission_classes = (AllowAny,)
+    serializer_class = UserRegisterSerializer
 
     def post(self, request):
-        ser_data = UserRegisterSerializer(data=request.POST)
+        ser_data = self.serializer_class(data=request.POST)
         if ser_data.is_valid():
             ser_data.create(ser_data.validated_data)
             return Response(ser_data.data, status=status.HTTP_201_CREATED)
