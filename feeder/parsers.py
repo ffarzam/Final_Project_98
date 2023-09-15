@@ -19,39 +19,25 @@ def get_info(xml_link):
 def channel_parser_one(xml_link):
     channel, namespaces = get_info(xml_link)
 
-    title = channel.find("title").text if channel.find("title") is not None else None
+    title = get_text_or_none(channel, "title")
 
-    subtitle = channel.find("itunes:subtitle", namespaces=namespaces).text \
-        if channel.find("itunes:subtitle", namespaces=namespaces) is not None \
-        else None
+    subtitle = get_text_or_none(channel, "itunes:subtitle", namespaces=namespaces)
 
-    last_update = datetime.strptime(channel.find("pubDate").text, "%a, %d %b %Y %H:%M:%S %z") \
-        if channel.find("pubDate") is not None \
-        else None
+    last_update = convert_str_to_date_time(get_text_or_none(channel, "pubDate"))
 
-    description = channel.find("description").text if channel.find("description") is not None else None
+    description = get_text_or_none(channel, "description")
 
-    language = channel.find("language").text if channel.find("language") is not None else None
+    language = get_text_or_none(channel, "language")
 
-    image_file_url = channel.find("itunes:image", namespaces=namespaces).attrib.get("href") \
-        if channel.find("itunes:image", namespaces=namespaces) is not None \
-        else None
+    image_file_url = get_url_or_none(channel, "itunes:image", lookup='href', namespaces=namespaces)
     if image_file_url is None:
-        image_file_url = channel.find("image/url").text \
-            if channel.find("image/url") is not None \
-            else None
+        image_file_url = get_url_or_none(channel, "image/url")
 
-    author = channel.find("itunes:author", namespaces=namespaces).text \
-        if channel.find("itunes:author", namespaces=namespaces) is not None \
-        else None
+    author = get_text_or_none(channel, "itunes:author", namespaces=namespaces)
 
-    owner = channel.find("itunes:owner/itunes:name", namespaces=namespaces).text \
-        if channel.find("itunes:owner/itunes:name", namespaces=namespaces) is not None \
-        else None
+    owner = get_text_or_none(channel, "itunes:owner/itunes:name", namespaces=namespaces)
 
-    owner_email = channel.find("itunes:owner/itunes:email", namespaces=namespaces).text \
-        if channel.find("itunes:owner/itunes:email", namespaces=namespaces) is not None \
-        else None
+    owner_email = get_text_or_none(channel, "itunes:owner/itunes:email", namespaces=namespaces)
 
     channel_info = {
         "title": title,
@@ -72,33 +58,23 @@ def item_parser_one(xml_link):
     channel, namespaces = get_info(xml_link)
 
     for item in channel.iter("item"):
-        title = item.find("title").text if item.find("title") is not None else None
+        title = get_text_or_none(item, "title")
 
-        subtitle = item.find("subtitle").text if item.find("subtitle") is not None else None
+        subtitle = get_text_or_none(item, "subtitle")
 
-        description = item.find("description").text if item.find("description") is not None else None
+        description = get_text_or_none(item, "description")
 
-        published_date = datetime.strptime(item.find("pubDate").text, "%a, %d %b %Y %H:%M:%S %z") \
-            if item.find("pubDate") is not None \
-            else None
+        published_date = convert_str_to_date_time(get_text_or_none(item, "pubDate"))
 
-        guid = item.find("guid").text if item.find("guid") is not None else None
+        guid = get_text_or_none(item, "guid")
 
-        image_file_url = item.find("itunes:image", namespaces=namespaces).attrib.get("href") \
-            if item.find("itunes:image", namespaces=namespaces) is not None \
-            else None
+        image_file_url = get_url_or_none(item, "itunes:image", lookup='href', namespaces=namespaces)
 
-        audio_file_url = item.find("enclosure").attrib.get("url") \
-            if item.find("enclosure") is not None \
-            else None
+        audio_file_url = get_url_or_none(item, "enclosure", lookup="url")
 
-        duration = item.find("itunes:duration", namespaces=namespaces).text \
-            if item.find("itunes:duration", namespaces=namespaces) is not None \
-            else None
+        duration = get_text_or_none(item, "itunes:duration", namespaces=namespaces)
 
-        explicit = item.find("itunes:explicit", namespaces=namespaces).text \
-            if item.find("itunes:explicit", namespaces=namespaces) is not None \
-            else None
+        explicit = get_text_or_none(item, "itunes:explicit", namespaces=namespaces)
 
         if audio_file_url is None or title is None or guid is None:
             continue
@@ -122,21 +98,18 @@ def item_parser_two(xml_link):
     channel, namespaces = get_info(xml_link)
 
     for item in channel.iter("item"):
-        title = item.find("title").text if item.find("title") is not None else None
 
-        link = item.find("link").text if item.find("link") is not None else None
+        title = get_text_or_none(item, "title")
 
-        published_date = item_parser_two_string_to_date_time_convertor(item.find("pubDate").text) \
-            if item.find("pubDate") is not None \
-            else None
+        link = get_text_or_none(item, "link")
 
-        source = item.find("source").attrib.get("url") if item.find("source") is not None else None
+        published_date = convert_str_to_date_time(get_text_or_none(item, "pubDate"))
 
-        guid = item.find("guid").text if item.find("guid") is not None else None
+        source = get_url_or_none(item, "source", lookup="url")
 
-        image_file_url = item.find("media:content", namespaces=namespaces).attrib.get("url") \
-            if item.find("media:content", namespaces=namespaces) is not None \
-            else None
+        guid = get_text_or_none(item, "guid")
+
+        image_file_url = get_url_or_none(item, "media:content", lookup="url", namespaces=namespaces)
 
         if guid is None:
             continue
@@ -151,12 +124,6 @@ def item_parser_two(xml_link):
         }
 
         yield item_info
-
-
-def item_parser_two_string_to_date_time_convertor(pub_dat_str):
-    pub_dat = pub_dat_str.replace("T", " ").replace("Z", "")
-    pub_dat = datetime.strptime(pub_dat, "%Y-%m-%d %H:%M:%S")
-    return pub_dat.replace(tzinfo=pytz.UTC)
 
 
 def channel_parser_mapper(arg):
@@ -183,3 +150,34 @@ def item_model_mapper(arg):
     }
     return choice[arg.capitalize()]
 
+
+def get_text_or_none(parent, arg, namespaces=None):
+    result = parent.find(arg, namespaces)
+    if result is not None:
+        result = result.text
+    return result
+
+
+def convert_str_to_date_time(arg):
+    date_format = {
+        "1": "%a, %d %b %Y %H:%M:%S %z",
+        "2": "%a, %d %b %Y %H:%M:%S %Z",
+        "3": "%Y-%m-%dT%H:%M:%SZ"
+    }
+    if arg is not None:
+        for value in date_format.values():
+            try:
+                if arg[-1] == "Z":
+                    arg = arg.replace("T", " ").replace("Z", "")
+
+                arg = datetime.strptime(arg, value).replace(tzinfo=pytz.UTC)
+            except:
+                pass
+    return arg
+
+
+def get_url_or_none(parent, arg, lookup=None, namespaces=None):
+    result = parent.find(arg, namespaces)
+    if result is not None:
+        result = result.attrib.get(lookup) or result.text
+    return result
