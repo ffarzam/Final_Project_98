@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'feeder',
     'interactions',
-    'Pages',
+    'pages',
     'drf_spectacular'
 
 ]
