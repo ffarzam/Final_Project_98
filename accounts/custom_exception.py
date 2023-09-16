@@ -15,3 +15,8 @@ class ExpiredRefreshTokenError(APIException):
     default_code = 'expired_refresh_token'
 
 
+class InvalidTokenError(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = _('Invalid Token, Please Login Again')
+    default_code = 'invalid_token'
+
