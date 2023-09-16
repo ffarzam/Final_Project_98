@@ -5,7 +5,7 @@ from accounts.authentication import AccessTokenAuthentication
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from .serializer import ChannelListSerializer
 from .utils import item_serializer_mapper
 
@@ -31,11 +31,13 @@ class CreateChannelAndItems(APIView):
                 channel_info = channel_parser(xml_link_obj.xml_link)
                 ItemClass = item_model_mapper(xml_link_obj.rss_type.name)
                 items_info = items_parser(xml_link_obj.xml_link)
-
-                with transaction.atomic():
-                    channel = Channel.objects.create(xml_link=xml_link_obj, **channel_info)
-                    items = (ItemClass(**item, channel=channel) for item in items_info)
-                    ItemClass.objects.bulk_create(items)
+                try:
+                    with transaction.atomic():
+                        channel = Channel.objects.create(xml_link=xml_link_obj, **channel_info)
+                        items = (ItemClass(**item, channel=channel) for item in items_info)
+                        ItemClass.objects.bulk_create(items)
+                except IntegrityError as e:
+                    return Response({"Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
                 return Response({"Message": "Channel and the Items Was Created"}, status=status.HTTP_201_CREATED)
 
@@ -65,15 +67,17 @@ class UpdateChannelAndItems(APIView):
                     items_parser = items_parser_mapper(xml_link_obj.items_parser)
                     items_info = items_parser(xml_link_obj.xml_link)
                     ItemClass = item_model_mapper(xml_link_obj.rss_type.name)
-
-                    with transaction.atomic():
-                        channel.save()
-                        items = (
-                            ItemClass(**item, channel=channel)
-                            for item in items_info
-                            if not ItemClass.objects.filter(guid=item.get("guid")).exists()
-                        )
-                        ItemClass.objects.bulk_create(items)
+                    try:
+                        with transaction.atomic():
+                            channel.save()
+                            items = (
+                                ItemClass(**item, channel=channel)
+                                for item in items_info
+                                if not ItemClass.objects.filter(guid=item.get("guid")).exists()
+                            )
+                            ItemClass.objects.bulk_create(items)
+                    except IntegrityError as e:
+                        return Response({"Message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
                     return Response({"Message": "Channel was Updated"}, status=status.HTTP_201_CREATED)
 
