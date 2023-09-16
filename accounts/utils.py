@@ -8,7 +8,7 @@ def generate_access_token(user_id, jti):
     access_token_payload = {
         "token_type": "access",
         'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_TTL),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=settings.ACCESS_TOKEN_TTL),
         'iat': datetime.datetime.utcnow(),
         'jti': jti,
     }
