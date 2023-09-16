@@ -1,7 +1,9 @@
+from pprint import pprint
+
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
@@ -93,20 +95,18 @@ class CheckAllActiveLogin(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        data = []
+        active_login_data = []
 
         for jti in caches['auth'].keys('*'):
-            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
+            raw_jti, user_id, user_agent, OS_accounts = jti_parser(jti)
             if request.user.id == int(user_id):
-                data.append({
+                active_login_data.append({
                     "raw_jti": raw_jti,
-                    "user_id": user_id,
-                    "OS": OS,
                     "user_agent": user_agent,
                     "OS_accounts": OS_accounts,
                 })
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(active_login_data, status=status.HTTP_200_OK)
 
 
 class LogoutAll(APIView):
@@ -117,7 +117,7 @@ class LogoutAll(APIView):
         jti_list = caches['auth'].keys('*')
 
         for jti in jti_list:
-            raw_jti, user_id, _, _, _ = jti_parser(jti)
+            raw_jti, user_id, _, _ = jti_parser(jti)
             if request.user.id == int(user_id):
                 caches['auth'].delete(jti)
 
@@ -134,7 +134,7 @@ class SelectedLogout(APIView):
         input_raw_jti = request.data.get("raw_jti")
 
         for jti in jti_list:
-            raw_jti, user_id, _, _, _ = jti_parser(jti)
+            raw_jti, user_id, _, _ = jti_parser(jti)
             if request.user.id == int(user_id) and input_raw_jti == raw_jti:
                 caches['auth'].delete(jti)
 
