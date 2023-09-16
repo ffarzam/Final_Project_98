@@ -51,4 +51,7 @@ class NotFoundPrefix(APIException):
     default_code = 'no_prefix'
 
 
-
+class CommonError(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = _('An error occurred')
+    default_code = 'error'
