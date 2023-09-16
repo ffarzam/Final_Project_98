@@ -27,3 +27,8 @@ class NotActiveUserError(APIException):
     default_code = 'not_active_user'
 
 
+class UserNotFound(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = _('User Not Found')
+    default_code = 'user_not_found'
+
