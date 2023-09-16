@@ -42,3 +42,7 @@ def encode_jwt(payload):
     return token
 
 
+def cache_key_or_value_parser(arg):
+    return arg.split(" || ")
+
+
