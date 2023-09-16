@@ -1,3 +1,4 @@
+from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,7 +8,7 @@ from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapp
 from Permissions import IsSuperuser
 from django.db import transaction, IntegrityError
 from .serializer import ChannelListSerializer
-from .utils import item_serializer_mapper
+from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
 
 
 # Create your views here.
@@ -88,12 +89,10 @@ class UpdateChannelAndItems(APIView):
         return Response({"Message": "No Link Was Found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-class ChannelList(APIView):
-
-    def get(self, request):
-        all_channels = Channel.objects.all()
-        ser_data = ChannelListSerializer(all_channels, many=True)
-        return Response(ser_data.data, status=status.HTTP_200_OK)
+class ChannelList(ListAPIView):
+    queryset = Channel.objects.all()
+    serializer_class = ChannelListSerializer
+    pagination_class = ChannelPagination
 
 
 class ItemsList(APIView):
