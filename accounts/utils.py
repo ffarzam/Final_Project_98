@@ -28,8 +28,8 @@ def generate_refresh_token(user_id, jti):
     return refresh_token
 
 
-def jti_maker(request, user_id):
-    return f"{uuid4().hex} || {user_id} || {request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
+def jti_maker():
+    return uuid4().hex
 
 
 def decode_jwt(token):
@@ -42,5 +42,3 @@ def encode_jwt(payload):
     return token
 
 
-def jti_parser(jti):
-    return jti.split(" || ")
