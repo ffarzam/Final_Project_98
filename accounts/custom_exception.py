@@ -39,3 +39,9 @@ class AuthorizationHeaderError(APIException):
     default_code = 'no_authorization_header'
 
 
+class NotFoundAccessToken(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = _('Access Token Not Found In Authorization Header')
+    default_code = 'no_access_token'
+
+
