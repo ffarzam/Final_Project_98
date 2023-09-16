@@ -29,7 +29,7 @@ def generate_refresh_token(user_id, jti):
 
 
 def jti_maker(request, user_id):
-    return f"{uuid4().hex} || {user_id} || {request.META['OS']} || {request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
+    return f"{uuid4().hex} || {user_id} || {request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
 
 
 def decode_jwt(token):

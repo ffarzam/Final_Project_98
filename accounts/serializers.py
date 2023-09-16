@@ -31,3 +31,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserLoginSerializer(serializers.Serializer):
     user_identifier = serializers.CharField()
     password = serializers.CharField()
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        # fields = '__all__' #???
+        exclude = ["password", "groups", "user_permissions"] #???
