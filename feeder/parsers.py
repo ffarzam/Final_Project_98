@@ -162,7 +162,7 @@ def convert_str_to_date_time(arg):
     date_format = [
         "%a, %d %b %Y %H:%M:%S %z",
         "%a, %d %b %Y %H:%M:%S %Z",
-        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%d %H:%M:%S",
     ]
     if arg is not None:
         for value in date_format:
