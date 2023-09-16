@@ -48,3 +48,7 @@ def cache_key_or_value_parser(arg):
 
 def cache_key_setter(user_id, jti):
     return f"user_{user_id} || {jti}"
+
+
+def cache_value_setter(request):
+    return f"{request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
