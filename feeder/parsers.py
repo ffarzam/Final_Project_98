@@ -159,13 +159,13 @@ def get_text_or_none(parent, arg, namespaces=None):
 
 
 def convert_str_to_date_time(arg):
-    date_format = {
-        "1": "%a, %d %b %Y %H:%M:%S %z",
-        "2": "%a, %d %b %Y %H:%M:%S %Z",
-        "3": "%Y-%m-%dT%H:%M:%SZ"
-    }
+    date_format = [
+        "%a, %d %b %Y %H:%M:%S %z",
+        "%a, %d %b %Y %H:%M:%S %Z",
+        "%Y-%m-%dT%H:%M:%SZ",
+    ]
     if arg is not None:
-        for value in date_format.values():
+        for value in date_format:
             try:
                 if arg[-1] == "Z":
                     arg = arg.replace("T", " ").replace("Z", "")
