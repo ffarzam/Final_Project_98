@@ -1,7 +1,7 @@
 from rest_framework.generics import ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, filters
 from accounts.authentication import AccessTokenAuthentication
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
@@ -93,6 +93,9 @@ class ChannelList(ListAPIView):
     queryset = Channel.objects.all()
     serializer_class = ChannelListSerializer
     pagination_class = ChannelPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ["title", "last_update"]
+    search_fields = ["title", "subtitle", "description"]
 
 
 class ItemsList(APIView, ItemsPagination):
