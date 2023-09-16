@@ -20,3 +20,10 @@ class InvalidTokenError(APIException):
     default_detail = _('Invalid Token, Please Login Again')
     default_code = 'invalid_token'
 
+
+class NotActiveUserError(APIException):
+    status_code = status.HTTP_403_FORBIDDEN
+    default_detail = _('User Is Not Active')
+    default_code = 'not_active_user'
+
+
