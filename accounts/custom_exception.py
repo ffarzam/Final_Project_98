@@ -45,3 +45,10 @@ class NotFoundAccessToken(APIException):
     default_code = 'no_access_token'
 
 
+class NotFoundPrefix(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = _('Token Prefix Not Found In Authorization Header')
+    default_code = 'no_prefix'
+
+
+
