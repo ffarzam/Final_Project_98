@@ -46,3 +46,5 @@ def cache_key_or_value_parser(arg):
     return arg.split(" || ")
 
 
+def cache_key_setter(user_id, jti):
+    return f"user_{user_id} || {jti}"
