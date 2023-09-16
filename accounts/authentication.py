@@ -35,7 +35,8 @@ class AbstractTokenAuthentication(ABC, BaseAuthentication):
     @staticmethod
     def validate_jti_token(payload):
         jti = payload.get('jti')
-        if jti not in caches['auth'].keys('*'):
+        user_id = payload.get('user_id')
+        if not caches['auth'].keys(f"user_{user_id} || {jti}"):
             raise custom_exception.InvalidTokenError
 
 
