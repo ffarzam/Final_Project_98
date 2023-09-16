@@ -139,3 +139,31 @@ class SelectedLogout(APIView):
                 caches['auth'].delete(jti)
 
         return Response({"message": True}, status=status.HTTP_200_OK)
+
+
+class ShowProfile(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ProfileSerializer
+
+    def get(self, request):
+        user = request.user
+        ser_data = self.serializer_class(user)
+
+        active_login_data = []
+
+        for jti in caches['auth'].keys('*'):
+            raw_jti, user_id, user_agent, OS_accounts = jti_parser(jti)
+            if request.user.id == int(user_id):
+                active_login_data.append({
+                    "raw_jti": raw_jti,
+                    "user_agent": user_agent,
+                    "OS_accounts": OS_accounts,
+                })
+
+        final_data = {
+            "user_data": ser_data.data,
+            "active_login_data": active_login_data
+        }
+
+        return Response(final_data, status=status.HTTP_200_OK)
