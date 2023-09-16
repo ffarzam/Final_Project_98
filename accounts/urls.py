@@ -9,6 +9,7 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('active_login/', views.CheckAllActiveLogin.as_view(), name='active_login'),
     path('selected_logout/', views.SelectedLogout.as_view(), name='selected_logout'),
+    path('profile/', views.ShowProfile.as_view(), name='profile'),
 
 ]
 
