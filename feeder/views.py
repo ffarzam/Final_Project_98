@@ -1,4 +1,6 @@
-from rest_framework.generics import ListAPIView
+from pprint import pprint
+
+from rest_framework.generics import ListAPIView, GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, filters
@@ -98,23 +100,30 @@ class ChannelList(ListAPIView):
     search_fields = ["title", "subtitle", "description"]
 
 
-class ItemsList(APIView, ItemsPagination):
-    # pagination_class = ItemsPagination  #LimitOffsetPagination
+class ItemsList(GenericAPIView):  # or ListAPIView
+    pagination_class = ItemsPagination  # LimitOffsetPagination
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    search_fields = ['title', "description", "subtitle"]
+    ordering_fields = ['title', 'published_date']
 
     def get(self, request, channel_id):
+        all_items, ItemClass, ser_channel_data = self.get_queryset()
+        paginator = self.pagination_class()
+        paginated_items = paginator.paginate_queryset(queryset=all_items, request=request, view=self)
+        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
+        ser_items_data = ItemSerializer(paginated_items, many=True)
+
+        return Response(ser_items_data.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+
         try:
-            channel = Channel.objects.get(id=channel_id)
+            channel = Channel.objects.get(id=self.kwargs["channel_id"])
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
         ser_channel_data = ChannelListSerializer(channel)
         ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
         all_items = ItemClass.objects.all()
-        paginated_items = self.paginate_queryset(queryset=all_items, request=request, view=self)
-        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
-        ser_items_data = ItemSerializer(paginated_items, many=True)
-        data = {
-            "channel": ser_channel_data.data,
-            "items": ser_items_data.data
-        }
-        return Response(data, status=status.HTTP_200_OK)
+
+        return all_items, ItemClass, ser_channel_data
