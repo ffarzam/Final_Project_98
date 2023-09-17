@@ -1,6 +1,4 @@
-from pprint import pprint
-
-from rest_framework.generics import ListAPIView, GenericAPIView
+from rest_framework.generics import ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, filters
@@ -9,7 +7,7 @@ from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
 from django.db import transaction, IntegrityError
-from .serializer import ChannelListSerializer
+from .serializer import ChannelSerializer
 from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
 
 
@@ -93,7 +91,7 @@ class UpdateChannelAndItems(APIView):
 
 class ChannelList(ListAPIView):
     queryset = Channel.objects.all()
-    serializer_class = ChannelListSerializer
+    serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     ordering_fields = ["title", "last_update"]
@@ -122,8 +120,35 @@ class ItemsList(GenericAPIView):  # or ListAPIView
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-        ser_channel_data = ChannelListSerializer(channel)
+        ser_channel_data = ChannelSerializer(channel)
         ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
         all_items = ItemClass.objects.all()
 
         return all_items, ItemClass, ser_channel_data
+
+
+class GetChannel(RetrieveAPIView):
+    queryset = Channel.objects.all()
+    serializer_class = ChannelSerializer
+
+
+class GetItem(APIView):
+
+    def get(self, request, channel_id, item_id):
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
+        try:
+            item = ItemClass.objects.get(id=item_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
+
+        ser_item = ItemSerializer(item)
+
+        return Response(ser_item.data, status=status.HTTP_200_OK)
+
