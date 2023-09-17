@@ -1,12 +1,12 @@
 from rest_framework.pagination import PageNumberPagination
 
-from .serializer import EpisodeListSerializer, NewsListSerializer
+from .serializer import EpisodeSerializer, NewsSerializer
 
 
 def item_serializer_mapper(item_class_name):
     mapper = {
-        "Episode": EpisodeListSerializer,
-        "News": NewsListSerializer,
+        "Episode": EpisodeSerializer,
+        "News": NewsSerializer,
     }
 
     return mapper[item_class_name]
