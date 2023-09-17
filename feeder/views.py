@@ -125,3 +125,10 @@ class ItemsList(GenericAPIView):  # or ListAPIView
         all_items = ItemClass.objects.all()
 
         return all_items, ItemClass, ser_channel_data
+
+
+class GetChannel(RetrieveAPIView):
+    queryset = Channel.objects.all()
+    serializer_class = ChannelSerializer
+
+
