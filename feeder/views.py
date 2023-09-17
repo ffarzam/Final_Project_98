@@ -1,6 +1,4 @@
-from pprint import pprint
-
-from rest_framework.generics import ListAPIView, GenericAPIView
+from rest_framework.generics import ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, filters
@@ -9,7 +7,7 @@ from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
 from django.db import transaction, IntegrityError
-from .serializer import ChannelListSerializer
+from .serializer import ChannelSerializer
 from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
 
 
@@ -93,7 +91,7 @@ class UpdateChannelAndItems(APIView):
 
 class ChannelList(ListAPIView):
     queryset = Channel.objects.all()
-    serializer_class = ChannelListSerializer
+    serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     ordering_fields = ["title", "last_update"]
@@ -122,7 +120,7 @@ class ItemsList(GenericAPIView):  # or ListAPIView
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-        ser_channel_data = ChannelListSerializer(channel)
+        ser_channel_data = ChannelSerializer(channel)
         ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
         all_items = ItemClass.objects.all()
 
