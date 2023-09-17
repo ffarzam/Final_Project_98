@@ -132,3 +132,23 @@ class GetChannel(RetrieveAPIView):
     serializer_class = ChannelSerializer
 
 
+class GetItem(APIView):
+
+    def get(self, channel_id, item_id):
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
+        try:
+            item = ItemClass.objects.get(id=item_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        ItemSerializer = item_serializer_mapper(ItemClass.__name__)
+
+        ser_item = ItemSerializer(item)
+
+        return Response(ser_item.data, status=status.HTTP_200_OK)
+
