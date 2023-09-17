@@ -134,7 +134,7 @@ class GetChannel(RetrieveAPIView):
 
 class GetItem(APIView):
 
-    def get(self, channel_id, item_id):
+    def get(self, request, channel_id, item_id):
         try:
             channel = Channel.objects.get(id=channel_id)
         except Exception as e:
