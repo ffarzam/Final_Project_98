@@ -36,6 +36,11 @@ class Channel(models.Model):
     owner = models.CharField(max_length=250, null=True, blank=True)
     owner_email = models.EmailField(null=True, blank=True)
 
+    # class Meta:   #must be asked
+    #     indexes = [
+    #         GinIndex(fields=['name']),
+    #     ]
+
     def __str__(self):
         return f'{self.title}'
 
@@ -67,3 +72,11 @@ class News(models.Model):
 
     def __str__(self):
         return f'Podcast: {self.channel} || News: {self.title}'
+
+
+class SearchCount(models.Model):
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    count = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.channel}"
