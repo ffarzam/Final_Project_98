@@ -1,13 +1,16 @@
+from django.contrib.postgres.search import TrigramSimilarity
+from django.db.models import Q, F
+from django.db.models.functions import Greatest
 from rest_framework.generics import ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, filters
 from accounts.authentication import AccessTokenAuthentication
-from .models import XmlLink, Channel
+from .models import XmlLink, Channel, SearchCount, Episode, News
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
 from Permissions import IsSuperuser
 from django.db import transaction, IntegrityError
-from .serializer import ChannelSerializer
+from .serializer import ChannelSerializer, EpisodeSerializer, NewsSerializer
 from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
 
 
@@ -90,19 +93,14 @@ class UpdateChannelAndItems(APIView):
 
 
 class ChannelList(ListAPIView):
-    queryset = Channel.objects.all()
+    queryset = Channel.objects.prefetch_related("searchcount_set").annotate(
+        search_count=F("searchcount__count")).order_by("-search_count").filter(search_count__isnull=False)
     serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
-    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
-    ordering_fields = ["title", "last_update"]
-    search_fields = ["title", "subtitle", "description"]
 
 
 class ItemsList(GenericAPIView):  # or ListAPIView
-    pagination_class = ItemsPagination  # LimitOffsetPagination
-    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
-    search_fields = ['title', "description", "subtitle"]
-    ordering_fields = ['title', 'published_date']
+    pagination_class = ItemsPagination  # LimitOffsetPagination???
 
     def get(self, request, channel_id):
         all_items, ItemClass, ser_channel_data = self.get_queryset()
