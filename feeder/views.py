@@ -150,3 +150,51 @@ class GetItem(APIView):
 
         return Response(ser_item.data, status=status.HTTP_200_OK)
 
+
+class SearchView(APIView):
+    def get(self, request):
+        search_query = request.query_params["search"]
+
+        channel_search_results = Channel.objects.filter(
+            Q(title__icontains=search_query) | Q(subtitle__icontains=search_query) | Q(
+                description__icontains=search_query)).distinct()
+
+        episode_search_results = Episode.objects.select_related("channel").filter(
+            Q(title__icontains=search_query) | Q(subtitle__icontains=search_query) | Q(
+                description__icontains=search_query)).distinct()
+
+        news_search_results = News.objects.select_related("channel").filter(Q(title__icontains=search_query)).distinct()
+
+        channel_id_set = set(map(lambda x: x[0], channel_search_results.values_list("id")))
+        for channel in channel_id_set:
+            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel)
+            search_count_obj.count += 1
+            search_count_obj.save()
+
+        channel_id_set_for_episode_search = set(map(lambda x: x[0], episode_search_results.values_list("channel")))
+        channel_id_set_for_episode_search_difference = channel_id_set_for_episode_search - channel_id_set
+        for channel_id in channel_id_set_for_episode_search_difference:
+            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel_id)
+            search_count_obj.count += 1
+            search_count_obj.save()
+            channel_id_set.add(channel_id)
+
+        channel_id_set_for_news_search = set(map(lambda x: x[0], episode_search_results.values_list("channel")))
+        channel_id_set_for_news_search_difference = channel_id_set_for_news_search - channel_id_set
+        for channel_id in channel_id_set_for_news_search_difference:
+            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel_id)
+            search_count_obj.count += 1
+            search_count_obj.save()
+            channel_id_set.add(channel_id)
+
+        channel_search_results_serialized = ChannelSerializer(channel_search_results, many=True)
+        episode_search_results_serialized = EpisodeSerializer(episode_search_results, many=True)
+        news_search_results_serialized = NewsSerializer(news_search_results, many=True)
+
+        data = {
+            "channel_search_results": channel_search_results_serialized.data,
+            "episode_search_results": episode_search_results_serialized.data,
+            "news_search_results": news_search_results_serialized.data
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
