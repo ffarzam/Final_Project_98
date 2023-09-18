@@ -6,9 +6,9 @@ class HitCountMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        lst = ['admin', "visitors_count", "status", "create", "update"]
+        blacklist = {'admin', "visitors_count", "status", "create", "update"}
 
-        path_blacklist = list(filter(lambda x: request.path.startswith(f"/{x}"), lst))
+        path_blacklist = set(filter(lambda x: request.path.startswith(f"/{x}"), blacklist))
         if len(path_blacklist) == 0:
             conn = get_redis_connection('hit_count')
 
