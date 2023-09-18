@@ -98,6 +98,16 @@ class ChannelList(ListAPIView):
     serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
 
+    def get_queryset(self):
+
+        filter_query = self.request.query_params.get("filter")
+        if filter_query:
+            queryset = Channel.objects.select_related("xml_link").prefetch_related("xml_link__categories").filter(
+                xml_link__categories__name=filter_query)
+        else:
+            queryset = self.queryset
+        return queryset
+
 
 class ItemsList(GenericAPIView):  # or ListAPIView
     pagination_class = ItemsPagination  # LimitOffsetPagination???
