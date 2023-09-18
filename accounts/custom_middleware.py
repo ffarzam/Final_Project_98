@@ -6,26 +6,15 @@ class HitCountMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if (not request.path.startswith('/admin')
-                and not request.path.startswith("/visitors_count")
-                and not request.path.startswith("/status")
-                and not request.path.startswith("/create")
-                and not request.path.startswith("/update")):
+        lst = ['admin', "visitors_count", "status", "create", "update"]
 
+        path_blacklist = list(filter(lambda x: request.path.startswith(f"/{x}"), lst))
+        if len(path_blacklist) == 0:
             conn = get_redis_connection('hit_count')
 
             ip_addr = get_client_ip_address(request)
 
             conn.sadd('ip', ip_addr)
-
-        # number_of_visitors = conn.scard("ip")
-
-        # request.META.get('HTTP_REMOTE_ADDR', None)
-        # request.META.get('HTTP_X_REAL_IP', None)
-        # request.META.get('HTTP_X_FORWARDED_FOR', None)
-        # request.META.get('REMOTE_ADDR', None)
-        # request.META.get('X_REAL_IP', None)
-        # request.META.get('X_FORWARDED_FOR', None)
 
         response = self.get_response(request)
 
@@ -40,5 +29,3 @@ def get_client_ip_address(request):
     else:
         ip_addr = req_headers.get('REMOTE_ADDR')
     return ip_addr
-
-
