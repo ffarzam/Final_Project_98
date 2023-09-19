@@ -95,7 +95,7 @@ class UpdateChannelAndItems(APIView):
 
 class ChannelList(ListAPIView):
     queryset = Channel.objects.prefetch_related("searchcount_set").annotate(
-        search_count=F("searchcount__count")).order_by("-search_count").filter(search_count__isnull=False)
+        search_count=F("searchcount__count")).order_by(F("search_count").desc(nulls_last=True))
     serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
 
