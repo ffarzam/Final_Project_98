@@ -1,17 +1,18 @@
-from django.contrib.postgres.search import TrigramSimilarity
-from django.db.models import Q, F
-from django.db.models.functions import Greatest
 from rest_framework.generics import ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, filters
-from accounts.authentication import AccessTokenAuthentication
+from rest_framework import status
+
+from django.db.models import Q, F
+from django.db import transaction, IntegrityError
+
 from .models import XmlLink, Channel, SearchCount, Episode, News
 from .parsers import channel_parser_mapper, items_parser_mapper, item_model_mapper
-from Permissions import IsSuperuser
-from django.db import transaction, IntegrityError
 from .serializer import ChannelSerializer, EpisodeSerializer, NewsSerializer
 from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
+
+from accounts.authentication import AccessTokenAuthentication
+from Permissions import IsSuperuser
 
 
 # Create your views here.
