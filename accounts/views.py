@@ -1,16 +1,17 @@
-from django.contrib.auth import authenticate
 from rest_framework.generics import UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from django.contrib.auth import authenticate
+from django.core.cache import caches
 
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
     cache_key_or_value_parser
-from django.core.cache import caches
 
 from Permissions import UserIsOwner
 
@@ -161,3 +162,12 @@ class ChangePasswordView(UpdateAPIView):
     permission_classes = (IsAuthenticated, UserIsOwner)
     queryset = CustomUser.objects.all()
     serializer_class = ChangePasswordSerializer
+
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response({"message": "Password has been successfully updated"})
+
+
