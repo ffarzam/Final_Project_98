@@ -8,7 +8,8 @@ from django.contrib.auth import authenticate
 from django.core.cache import caches
 
 from .models import CustomUser
-from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
+    UpdateUserSerializer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
     cache_key_or_value_parser
@@ -171,3 +172,8 @@ class ChangePasswordView(UpdateAPIView):
         return Response({"message": "Password has been successfully updated"})
 
 
+class UpdateProfileView(UpdateAPIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated, UserIsOwner)
+    queryset = CustomUser.objects.all()
+    serializer_class = UpdateUserSerializer
