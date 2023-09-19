@@ -11,8 +11,8 @@ urlpatterns = [
     path('active_login/', views.CheckAllActiveLogin.as_view(), name='active_login'),
     path('selected_logout/', views.SelectedLogout.as_view(), name='selected_logout'),
     path('profile/', views.ShowProfile.as_view(), name='profile'),
-    path('change_password/<int:pk>/', views.ChangePasswordView.as_view(), name='change_password'),
-
+    path('change_password/<int:pk>', views.ChangePasswordView.as_view(), name='change_password'),
+    path('update_profile/<int:pk>', views.UpdateProfileView.as_view(), name='update_profile'),
 ]
 
 
