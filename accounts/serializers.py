@@ -24,6 +24,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
         return value
 
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("email has already been taken")
+
+        return value
+
     def validate(self, data):
         if data['password'] != data['password2']:
             raise serializers.ValidationError("Passwords don't match")
