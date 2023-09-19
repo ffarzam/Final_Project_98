@@ -1,4 +1,5 @@
 from django.db import models
+from feeder.utils import ItemsMixin
 
 
 # Create your models here.
@@ -51,7 +52,7 @@ class Channel(models.Model):
         return f'{self.title}'
 
 
-class Episode(models.Model):
+class Episode(ItemsMixin, models.Model):
     title = models.CharField(max_length=250)
     subtitle = models.TextField(null=True, blank=True)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
@@ -63,11 +64,8 @@ class Episode(models.Model):
     duration = models.CharField(max_length=25, null=True, blank=True)
     explicit = models.CharField(max_length=10, null=True, blank=True)
 
-    def __str__(self):
-        return f'Podcast: {self.channel} || Episode: {self.title}'
 
-
-class News(models.Model):
+class News(ItemsMixin, models.Model):
     title = models.CharField(max_length=500)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     link = models.URLField()
@@ -75,9 +73,6 @@ class News(models.Model):
     guid = models.CharField(max_length=255)
     published_date = models.DateTimeField(null=True, blank=True)
     image_file_url = models.URLField(max_length=500, null=True, blank=True)
-
-    def __str__(self):
-        return f'Podcast: {self.channel} || News: {self.title}'
 
 
 class SearchCount(models.Model):
