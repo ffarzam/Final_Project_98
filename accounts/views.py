@@ -1,7 +1,10 @@
 from django.contrib.auth import authenticate
+from rest_framework.generics import UpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer
+
+from .models import CustomUser
+from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
@@ -149,3 +152,10 @@ class ShowProfile(APIView):
         user = request.user
         ser_data = self.serializer_class(user)
         return Response(ser_data.data, status=status.HTTP_200_OK)
+
+
+class ChangePasswordView(UpdateAPIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    queryset = CustomUser.objects.all()
+    serializer_class = ChangePasswordSerializer
