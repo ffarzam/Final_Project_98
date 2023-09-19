@@ -12,6 +12,8 @@ from .utils import generate_refresh_token, generate_access_token, jti_maker, cac
     cache_key_or_value_parser
 from django.core.cache import caches
 
+from Permissions import UserIsOwner
+
 
 # Create your views here.
 
@@ -156,6 +158,6 @@ class ShowProfile(APIView):
 
 class ChangePasswordView(UpdateAPIView):
     authentication_classes = (AccessTokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, UserIsOwner)
     queryset = CustomUser.objects.all()
     serializer_class = ChangePasswordSerializer
