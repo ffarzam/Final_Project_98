@@ -19,6 +19,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if len(value) < 6 or len(value) > 15:
             raise ValidationError('Username must be between 6 and 15 characters long')
+        if CustomUser.objects.filter(username=value).exists():
+            raise serializers.ValidationError("username has already been taken")
+
         return value
 
     def validate(self, data):
