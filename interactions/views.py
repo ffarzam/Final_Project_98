@@ -64,3 +64,20 @@ class LikeView(APIView):
         return Response({'like_count': count}, status=status.HTTP_200_OK)
 
 
+class RecommendationView(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        max_count = Recommendation.objects.aggregate(max_count=Max("count"))["max_count"]
+        recommendation_query = Recommendation.objects.filter(user=user, count=max_count)
+        lst = []
+        for item in recommendation_query:
+            channel = Channel.objects.filter(xml_link__categories=item.category)
+            lst.append(list(channel))
+
+        flatList = set(sum(lst, []))
+        ser_data = ChannelSerializer(flatList, many=True)
+
+        return Response(ser_data.data, status=status.HTTP_200_OK)
