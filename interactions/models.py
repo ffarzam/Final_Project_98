@@ -10,6 +10,9 @@ class Like(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 
+    def __str__(self):
+        return f"{self.user} liked {self.content_object}"
+
 
 class Comment(models.Model):
     content = models.TextField()
