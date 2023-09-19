@@ -10,6 +10,9 @@ class Like(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 
+    def __str__(self):
+        return f"{self.user} liked {self.content_object}"
+
 
 class Comment(models.Model):
     content = models.TextField()
@@ -31,3 +34,13 @@ class Bookmark(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
+
+
+class Recommendation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    category = models.ForeignKey("feeder.Category", on_delete=models.CASCADE)
+    # channel = models.ForeignKey("feeder.Channel", on_delete=models.CASCADE)
+    count = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.user} liked {self.category} {self.count} times"

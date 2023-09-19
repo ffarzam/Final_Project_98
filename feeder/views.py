@@ -95,7 +95,7 @@ class UpdateChannelAndItems(APIView):
 
 class ChannelList(ListAPIView):
     queryset = Channel.objects.prefetch_related("searchcount_set").annotate(
-        search_count=F("searchcount__count")).order_by("-search_count").filter(search_count__isnull=False)
+        search_count=F("searchcount__count")).order_by(F("search_count").desc(nulls_last=True))
     serializer_class = ChannelSerializer
     pagination_class = ChannelPagination
 
@@ -114,7 +114,7 @@ class ItemsList(GenericAPIView):  # or ListAPIView
     pagination_class = ItemsPagination  # LimitOffsetPagination???
 
     def get(self, request, channel_id):
-        all_items, ItemClass, ser_channel_data = self.get_queryset()
+        all_items, ItemClass = self.get_queryset()
         paginator = self.pagination_class()
         paginated_items = paginator.paginate_queryset(queryset=all_items, request=request, view=self)
         ItemSerializer = item_serializer_mapper(ItemClass.__name__)
@@ -129,11 +129,10 @@ class ItemsList(GenericAPIView):  # or ListAPIView
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-        ser_channel_data = ChannelSerializer(channel)
         ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
-        all_items = ItemClass.objects.all()
+        all_items = ItemClass.objects.filter(channel=channel)
 
-        return all_items, ItemClass, ser_channel_data
+        return all_items, ItemClass
 
 
 class GetChannel(RetrieveAPIView):
