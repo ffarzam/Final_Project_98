@@ -78,3 +78,34 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email')
+        extra_kwargs = {
+            'username': {'required': True},
+            'email': {'required': True},
+        }
+
+    def validate_email(self, value):
+        user = self.context['request'].user
+        if CustomUser.objects.exclude(id=user.id).filter(email=value).exists():
+            raise serializers.ValidationError("Email has already been taken")
+        return value
+
+    def validate_username(self, value):
+        user = self.context['request'].user
+        if CustomUser.objects.exclude(id=user.id).filter(username=value).exists():
+            raise serializers.ValidationError("Username has already been taken")
+        return value
+
+    def update(self, instance, validated_data):
+
+        instance.username = validated_data['username']
+        instance.email = validated_data['email']
+
+        instance.save()
+
+        return instance
