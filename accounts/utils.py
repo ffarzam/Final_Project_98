@@ -8,7 +8,7 @@ def generate_access_token(user_id, jti):
     access_token_payload = {
         "token_type": "access",
         'user_id': user_id,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=settings.ACCESS_TOKEN_TTL),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=settings.ACCESS_TOKEN_TTL),
         'iat': datetime.datetime.utcnow(),
         'jti': jti,
     }
@@ -28,8 +28,8 @@ def generate_refresh_token(user_id, jti):
     return refresh_token
 
 
-def jti_maker(request, user_id):
-    return f"{uuid4().hex} || {user_id} || {request.META['OS']} || {request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
+def jti_maker():
+    return uuid4().hex
 
 
 def decode_jwt(token):
@@ -42,5 +42,13 @@ def encode_jwt(payload):
     return token
 
 
-def jti_parser(jti):
-    return jti.split(" || ")
+def cache_key_or_value_parser(arg):
+    return arg.split(" || ")
+
+
+def cache_key_setter(user_id, jti):
+    return f"user_{user_id} || {jti}"
+
+
+def cache_value_setter(request):
+    return f"{request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"

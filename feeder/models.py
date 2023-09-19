@@ -5,9 +5,15 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 class Type(models.Model):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"{self.name}"
 
     def __str__(self):
         return f"{self.name}"
@@ -21,11 +27,7 @@ class XmlLink(models.Model):
     categories = models.ManyToManyField(Category, blank=True)
 
     def __str__(self):
-        try:
-            name = Channel.objects.get(xml_link=self).title
-            return f'{name} || {self.xml_link}'
-        except:
-            return f'{self.xml_link}'
+        return f'{self.xml_link}'
 
 
 class Channel(models.Model):
@@ -39,6 +41,11 @@ class Channel(models.Model):
     author = models.TextField(null=True, blank=True)
     owner = models.CharField(max_length=250, null=True, blank=True)
     owner_email = models.EmailField(null=True, blank=True)
+
+    # class Meta:   #must be asked
+    #     indexes = [
+    #         GinIndex(fields=['name']),
+    #     ]
 
     def __str__(self):
         return f'{self.title}'
@@ -71,3 +78,11 @@ class News(models.Model):
 
     def __str__(self):
         return f'Podcast: {self.channel} || News: {self.title}'
+
+
+class SearchCount(models.Model):
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    count = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.channel}"

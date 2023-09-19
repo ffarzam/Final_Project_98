@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'feeder',
     'interactions',
-    'Pages',
+    'pages',
     'drf_spectacular'
 
 ]
@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.custom_middleware.HitCountMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -164,19 +165,28 @@ CACHES = {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
         'TIMEOUT': REDIS_DEFAULT_TTL,
-        # 'OPTIONS': {
-        #     'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        # },
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
     },
 
     'auth': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/2',
         'TIMEOUT': REDIS_AUTH_TTL,
-        # 'OPTIONS': {
-        #     'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        # },
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
     },
+
+    'hit_count': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
+
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+        },
 
 }
 

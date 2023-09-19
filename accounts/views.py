@@ -1,11 +1,12 @@
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import UserRegisterSerializer, UserLoginSerializer
+from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
-from .utils import generate_refresh_token, generate_access_token, jti_maker, jti_parser
+from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
+    cache_key_or_value_parser
 from django.core.cache import caches
 
 
@@ -14,9 +15,10 @@ from django.core.cache import caches
 
 class UserRegister(APIView):
     permission_classes = (AllowAny,)
+    serializer_class = UserRegisterSerializer
 
     def post(self, request):
-        ser_data = UserRegisterSerializer(data=request.POST)
+        ser_data = self.serializer_class(data=request.POST)
         if ser_data.is_valid():
             ser_data.create(ser_data.validated_data)
             return Response(ser_data.data, status=status.HTTP_201_CREATED)
@@ -36,11 +38,12 @@ class UserLogin(APIView):
         if user is None:
             return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-        jti = jti_maker(request, user.id)
+        jti = jti_maker()
         access_token = generate_access_token(user.id, jti)
         refresh_token = generate_refresh_token(user.id, jti)
-
-        caches['auth'].set(jti, 0)
+        key = cache_key_setter(user.id, jti)
+        value = cache_value_setter(request)
+        caches['auth'].set(key, value)
 
         data = {
             "access": access_token,
@@ -58,12 +61,15 @@ class RefreshToken(APIView):
         payload = request.auth
 
         jti = payload["jti"]
-        caches['auth'].delete(jti)
+        caches['auth'].delete(f'user_{user.id} || {jti}')
 
-        jti = jti_maker(request, user.id)
+        jti = jti_maker()
         access_token = generate_access_token(user.id, jti)
         refresh_token = generate_refresh_token(user.id, jti)
-        caches['auth'].set(jti, 0, version=None)
+
+        key = cache_key_setter(user.id, jti)
+        value = cache_value_setter(request)
+        caches['auth'].set(key, value)
 
         data = {
             "access": access_token,
@@ -79,8 +85,9 @@ class LogoutView(APIView):
     def post(self, request):
         try:
             payload = request.auth
+            user = request.user
             jti = payload["jti"]
-            caches['auth'].delete(jti)
+            caches['auth'].delete(f'user_{user.id} || {jti}')
 
             return Response({"message": True}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -92,20 +99,22 @@ class CheckAllActiveLogin(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        data = []
+        payload = request.auth
+        user = request.user
+        jti = payload["jti"]
 
-        for jti in caches['auth'].keys('*'):
-            raw_jti, user_id, OS, user_agent, OS_accounts = jti_parser(jti)
-            if request.user.id == int(user_id):
-                data.append({
-                    "raw_jti": raw_jti,
-                    "user_id": user_id,
-                    "OS": OS,
-                    "user_agent": user_agent,
-                    "OS_accounts": OS_accounts,
-                })
+        active_login_data = []
+        for value in caches['auth'].get_many(caches['auth'].keys(f'user_{user.id} || *')).values():
+            user_agent = cache_key_or_value_parser(value)[0]
+            OS_accounts = cache_key_or_value_parser(value)[1]
 
-        return Response(data, status=status.HTTP_200_OK)
+            active_login_data.append({
+                "jti": jti,
+                "user_agent": user_agent,
+                "OS_accounts": OS_accounts,
+            })
+
+        return Response(active_login_data, status=status.HTTP_200_OK)
 
 
 class LogoutAll(APIView):
@@ -113,12 +122,8 @@ class LogoutAll(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        jti_list = caches['auth'].keys('*')
-
-        for jti in jti_list:
-            raw_jti, user_id, _, _, _ = jti_parser(jti)
-            if request.user.id == int(user_id):
-                caches['auth'].delete(jti)
+        user = request.user
+        caches['auth'].delete_many(caches['auth'].keys(f'user_{user.id} || *'))
 
         return Response({"message": "All accounts logged out"}, status=status.HTTP_200_OK)
 
@@ -128,13 +133,19 @@ class SelectedLogout(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        jti_list = caches['auth'].keys('*')
-
-        input_raw_jti = request.data.get("raw_jti")
-
-        for jti in jti_list:
-            raw_jti, user_id, _, _, _ = jti_parser(jti)
-            if request.user.id == int(user_id) and input_raw_jti == raw_jti:
-                caches['auth'].delete(jti)
+        user = request.user
+        jti = request.data.get("jti")
+        caches['auth'].delete(f'user_{user.id} || {jti}')
 
         return Response({"message": True}, status=status.HTTP_200_OK)
+
+
+class ShowProfile(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ProfileSerializer
+
+    def get(self, request):
+        user = request.user
+        ser_data = self.serializer_class(user)
+        return Response(ser_data.data, status=status.HTTP_200_OK)
