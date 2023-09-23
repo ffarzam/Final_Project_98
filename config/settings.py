@@ -156,10 +156,10 @@ SPECTACULAR_SETTINGS = {
 }
 ACCESS_TOKEN_TTL = 60 * 60 * 24 * 1  # 1 Day
 REFRESH_TOKEN_TTL = 60 * 60 * 24 * 14  # 14 Day
-REDIS_HOST = '127.0.0.1'
-REDIS_PORT = 6379
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get('REDIS_PORT')
 REDIS_DEFAULT_TTL = 60 * 60 * 24 * 14  # 14 Days
-REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 1 Day
+REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 14 Day
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
