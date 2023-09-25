@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
@@ -79,12 +80,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 DATABASES = {
     'default': {
@@ -188,7 +183,73 @@ CACHES = {
             },
         },
 
+    'celery_broker': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/4',
+
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+    },
+
+    'celery_backends': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/5',
+
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+    },
+
 }
 
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
+
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
+RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
+
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/5'
+CELERY_TIMEZONE = 'UTC'
+
+
+# TODO:
+# CELERY_BEAT_SCHEDULE = {
+#     'notify_customers': {
+#         'task': 'feedr.tasks.update_all_rss',
+#         'schedule': crontab(minute=0, hour=0),
+#
+#     }
+# }
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "formatters": {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+    },
+
+    "handlers": {
+
+        "file": {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': 'celery_log.log',
+            'when': 'midnight',
+            'backupCount': 30,
+            'formatter': 'verbose'
+        },
+    },
+    "loggers": {
+        "celery": {
+            "handlers": ["file"],
+            "level": "INFO",
+            'propagate': False
+        },
+
+    },
+}
