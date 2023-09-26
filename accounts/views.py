@@ -1,16 +1,14 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.urls import reverse
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import authenticate
+from django.core.cache import caches
+
 from rest_framework.generics import UpdateAPIView, GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-
-from django.contrib.auth import authenticate
-from django.core.cache import caches
 
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
@@ -18,7 +16,7 @@ from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from .tasks import send_reset_password_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
-    cache_key_parser, send_email
+    cache_key_parser
 
 from Permissions import UserIsOwner
 
@@ -199,4 +197,18 @@ class PasswordResetRequestView(GenericAPIView):
         return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
 
 
+class SetNewPasswordView(GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
 
+    def patch(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={"kwargs": kwargs})
+        serializer.is_valid(raise_exception=True)
+
+        uidb64 = kwargs["uibd64"]
+
+        user_id = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(id=user_id)
+        password = serializer.validated_data['password']
+        user.set_password(password)
+        user.save()
+        return Response({"success": "Password Reset Done"}, status=status.HTTP_200_OK)
