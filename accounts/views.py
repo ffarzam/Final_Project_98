@@ -1,4 +1,9 @@
-from rest_framework.generics import UpdateAPIView
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from rest_framework.generics import UpdateAPIView, GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,10 +14,11 @@ from django.core.cache import caches
 
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
-    UpdateUserSerializer
+    UpdateUserSerializer, PasswordResetSerializer, SetNewPasswordSerializer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
+from .tasks import send_reset_password_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
-    cache_key_or_value_parser
+    cache_key_parser, send_email
 
 from Permissions import UserIsOwner
 
@@ -106,19 +112,15 @@ class CheckAllActiveLogin(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        payload = request.auth
         user = request.user
-        jti = payload["jti"]
 
         active_login_data = []
-        for value in caches['auth'].get_many(caches['auth'].keys(f'user_{user.id} || *')).values():
-            user_agent = cache_key_or_value_parser(value)[0]
-            OS_accounts = cache_key_or_value_parser(value)[1]
+        for key, value in caches['auth'].get_many(caches['auth'].keys(f'user_{user.id} || *')).items():
+            jti = cache_key_parser(key)[1]
 
             active_login_data.append({
                 "jti": jti,
-                "user_agent": user_agent,
-                "OS_accounts": OS_accounts,
+                "user_agent": value,
             })
 
         return Response(active_login_data, status=status.HTTP_200_OK)
