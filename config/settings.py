@@ -13,6 +13,7 @@ import os
 from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
+
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,13 +84,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('NAME'),
-            'HOST': os.environ.get('HOST'),
-            'PORT': os.environ.get('PORT'),
-            'USER': os.environ.get('USER'),
-            'PASSWORD': os.environ.get('PASSWORD')
-        }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('NAME'),
+        'HOST': os.environ.get('HOST'),
+        'PORT': os.environ.get('PORT'),
+        'USER': os.environ.get('USER'),
+        'PASSWORD': os.environ.get('PASSWORD')
+    }
 }
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -175,13 +176,13 @@ CACHES = {
     },
 
     'hit_count': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
 
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            },
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
+    },
 
     'celery_broker': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -212,7 +213,6 @@ RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/5'
 CELERY_TIMEZONE = 'UTC'
-
 
 # TODO:
 # CELERY_BEAT_SCHEDULE = {
@@ -253,3 +253,5 @@ LOGGING = {
 
     },
 }
+
+PASSWORD_RESET_TIMEOUT = 20 * 60  # 20 min
