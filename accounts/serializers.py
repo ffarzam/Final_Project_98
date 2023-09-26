@@ -125,4 +125,34 @@ class PasswordResetSerializer(serializers.Serializer):
         return super().validate(data)
 
 
+class SetNewPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True)
 
+    class Meta:
+        model = CustomUser
+        fields = ('password', 'password2')
+
+    def validate(self, data):
+
+        password = data['password']
+        token = self.context.get('kwargs').get("token")
+        uidb64 = self.context.get('kwargs').get("uibd64")
+        if token is None or uidb64 is None:
+            raise serializers.ValidationError("Missing Data")
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(id=user_id)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
+        if user.email == password:
+            raise serializers.ValidationError("Password and your email can't be same")
+        if password == user.username:
+            raise serializers.ValidationError("Password and your username can't be same")
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise serializers.ValidationError("Token is not valid, please request again")
+
+        return super().validate(data)
