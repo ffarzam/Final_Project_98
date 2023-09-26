@@ -1,18 +1,22 @@
-from rest_framework.generics import UpdateAPIView
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth import authenticate
+from django.core.cache import caches
+
+from rest_framework.generics import UpdateAPIView, GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from django.contrib.auth import authenticate
-from django.core.cache import caches
-
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
-    UpdateUserSerializer
+    UpdateUserSerializer, PasswordResetSerializer, SetNewPasswordSerializer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
+from .tasks import send_reset_password_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
-    cache_key_or_value_parser
+    cache_key_parser
 
 from Permissions import UserIsOwner
 
@@ -106,19 +110,15 @@ class CheckAllActiveLogin(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        payload = request.auth
         user = request.user
-        jti = payload["jti"]
 
         active_login_data = []
-        for value in caches['auth'].get_many(caches['auth'].keys(f'user_{user.id} || *')).values():
-            user_agent = cache_key_or_value_parser(value)[0]
-            OS_accounts = cache_key_or_value_parser(value)[1]
+        for key, value in caches['auth'].get_many(caches['auth'].keys(f'user_{user.id} || *')).items():
+            jti = cache_key_parser(key)[1]
 
             active_login_data.append({
                 "jti": jti,
-                "user_agent": user_agent,
-                "OS_accounts": OS_accounts,
+                "user_agent": value,
             })
 
         return Response(active_login_data, status=status.HTTP_200_OK)
@@ -159,21 +159,59 @@ class ShowProfile(APIView):
 
 
 class ChangePasswordView(UpdateAPIView):
+    http_method_names = ["patch"]
     authentication_classes = (AccessTokenAuthentication,)
-    permission_classes = (IsAuthenticated, UserIsOwner)
-    queryset = CustomUser.objects.all()
+    permission_classes = (IsAuthenticated,)
     serializer_class = ChangePasswordSerializer
 
-    def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+    def patch(self, request, *args, **kwargs):
+        instance = self.request.user
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response({"message": "Password has been successfully updated"})
 
 
 class UpdateProfileView(UpdateAPIView):
+    http_method_names = ["patch"]
     authentication_classes = (AccessTokenAuthentication,)
-    permission_classes = (IsAuthenticated, UserIsOwner)
-    queryset = CustomUser.objects.all()
+    permission_classes = (IsAuthenticated,)
     serializer_class = UpdateUserSerializer
+
+    def get_object(self):
+        return self.request.user
+
+
+class PasswordResetRequestView(GenericAPIView):
+    serializer_class = PasswordResetSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        user = CustomUser.objects.filter(email=email)
+        if not user.exists():
+            return Response({'message': "This email doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
+        user = user.get()
+        current_site = get_current_site(request).domain
+        send_reset_password_link.delay(current_site, user.id)
+
+        return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
+
+
+class SetNewPasswordView(GenericAPIView):
+    serializer_class = SetNewPasswordSerializer
+
+    def patch(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={"kwargs": kwargs})
+        serializer.is_valid(raise_exception=True)
+
+        uidb64 = kwargs["uibd64"]
+
+        user_id = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(id=user_id)
+        password = serializer.validated_data['password']
+        user.set_password(password)
+        user.save()
+        return Response({"success": "Password Reset Done"}, status=status.HTTP_200_OK)
