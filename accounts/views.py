@@ -173,10 +173,13 @@ class ChangePasswordView(UpdateAPIView):
 
 
 class UpdateProfileView(UpdateAPIView):
+    http_method_names = ["patch"]
     authentication_classes = (AccessTokenAuthentication,)
-    permission_classes = (IsAuthenticated, UserIsOwner)
-    queryset = CustomUser.objects.all()
+    permission_classes = (IsAuthenticated,)
     serializer_class = UpdateUserSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 class PasswordResetRequestView(GenericAPIView):
