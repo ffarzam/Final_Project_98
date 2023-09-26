@@ -159,14 +159,14 @@ class ShowProfile(APIView):
 
 
 class ChangePasswordView(UpdateAPIView):
+    http_method_names = ["patch"]
     authentication_classes = (AccessTokenAuthentication,)
-    permission_classes = (IsAuthenticated, UserIsOwner)
-    queryset = CustomUser.objects.all()
+    permission_classes = (IsAuthenticated,)
     serializer_class = ChangePasswordSerializer
 
-    def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+    def patch(self, request, *args, **kwargs):
+        instance = self.request.user
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response({"message": "Password has been successfully updated"})
