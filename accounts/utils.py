@@ -55,3 +55,11 @@ def cache_key_setter(user_id, jti):
 def cache_value_setter(request):
     return request.META.get('HTTP_USER_AGENT', 'UNKNOWN')
 
+
+def send_email(data):
+    email = EmailMessage(
+        subject=data['email_subject'],
+        body=data["email_body"],
+        to=[data["to_email"]]
+    )
+    email.send()
