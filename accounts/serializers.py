@@ -112,3 +112,17 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate(self, data):
+        email = data["email"]
+        user = CustomUser.objects.filter(email=email)
+        if not user.exists():
+            raise serializers.ValidationError("This email doesn't exist")
+        return super().validate(data)
+
+
+
