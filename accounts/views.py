@@ -179,3 +179,24 @@ class UpdateProfileView(UpdateAPIView):
     permission_classes = (IsAuthenticated, UserIsOwner)
     queryset = CustomUser.objects.all()
     serializer_class = UpdateUserSerializer
+
+
+class PasswordResetRequestView(GenericAPIView):
+    serializer_class = PasswordResetSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        user = CustomUser.objects.filter(email=email)
+        if not user.exists():
+            return Response({'message': "This email doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
+        user = user.get()
+        current_site = get_current_site(request).domain
+        send_reset_password_link.delay(current_site, user.id)
+
+        return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
+
+
+
