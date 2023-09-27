@@ -29,4 +29,14 @@ class BookmarkMixin:
         return False
 
 
+class LikeMixin:
+    def get_is_liked(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Like.objects.filter(user=user,
+                                       content_type=ContentType.objects.get(model=obj.__class__.__name__.lower()),
+                                       object_id=obj.id).exists()
+        return False
 
+    def get_liked_count(self, obj):
+        return obj.number_of_likes
