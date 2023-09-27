@@ -1,19 +1,25 @@
-import itertools
+from django.contrib.contenttypes.models import ContentType
+from django.db.models import Max
 
-from django.db.models import Max, F, Subquery, Q
-from django.db.models.functions import Coalesce
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from accounts.authentication import AccessTokenAuthentication
 
-from feeder.models import Channel
-from feeder.parsers import item_model_mapper
+from .models import Like, Recommendation, Comment, Bookmark
+from .seializers import CommentSerializer
+from .tasks import create_comment
+from .utils import CommentsPagination, recommendation_counter, UserLikeListPagination
 
-from .models import Like, Recommendation
-from feeder.serializer import ChannelSerializer
+from feeder.models import Channel, Episode, News
+from feeder.parsers import item_model_mapper
+from feeder.serializer import EpisodeSerializer, NewsSerializer, ChannelSerializer
+from feeder.utils import ChannelPagination, item_serializer_mapper
+
+from feeder.utils import ItemsPagination
 
 
 # Create your views here.
@@ -32,12 +38,7 @@ class LikeView(APIView):
         try:
             channel = Channel.objects.get(id=channel_id)
             categories = channel.xml_link.categories.all()
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
-
-        ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
-
-        try:
+            ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
             item = ItemClass.objects.get(id=item_id)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
@@ -47,21 +48,19 @@ class LikeView(APIView):
 
         if action == "unlike" and like_query.exists():
             like_query.delete()
-            for category in categories:
-                recommendation_obj, created = Recommendation.objects.get_or_create(user=request.user, category=category)
-                recommendation_obj.count -= 1
-                recommendation_obj.save()
+            recommendation_counter(request.user, categories)
+            message = "Like Undone"
 
         elif action == "like" and not like_query.exists():
             Like.objects.create(content_object=item, user=request.user)
-            for category in categories:
-                recommendation_obj, created = Recommendation.objects.get_or_create(user=request.user, category=category)
-                recommendation_obj.count += 1
-                recommendation_obj.save()
+            recommendation_counter(request.user, categories, flag=True)
+            message = "Like Done"
+        else:
+            return Response({'error': "Action Undetected"}, status=status.HTTP_400_BAD_REQUEST)
 
         count = item.number_of_likes
 
-        return Response({'like_count': count}, status=status.HTTP_200_OK)
+        return Response({'success': message, 'like_count': count}, status=status.HTTP_200_OK)
 
 
 class RecommendationView(APIView):
@@ -78,6 +77,6 @@ class RecommendationView(APIView):
             lst.append(list(channel))
 
         flatList = set(sum(lst, []))
-        ser_data = ChannelSerializer(flatList, many=True)
+        ser_data = ChannelSerializer(flatList, many=True, context={"request": request})
 
         return Response(ser_data.data, status=status.HTTP_200_OK)
