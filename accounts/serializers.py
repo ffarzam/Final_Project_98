@@ -69,7 +69,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         if data['password'] == user.username:
             raise serializers.ValidationError("Password and your username can't be same")
 
-        return data
+        return super().validate(data)
 
     def validate_old_password(self, value):
         user = self.context['request'].user
@@ -98,6 +98,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Password and username can't be same")
         if user.check_password(data['email']):
             raise serializers.ValidationError("Password and email can't be same")
+        return super().validate(data)
 
     def validate_username(self, value):
         if len(value) < 6:

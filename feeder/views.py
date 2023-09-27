@@ -1,5 +1,3 @@
-from celery import shared_task
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.views import APIView
@@ -8,12 +6,12 @@ from rest_framework import status
 
 from django.db.models import Q, F
 
-from .models import Channel, SearchCount, Episode, News
+from .models import Channel, Episode, News
 from .parsers import item_model_mapper
 from .serializer import ChannelSerializer, EpisodeSerializer, NewsSerializer
-from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination
+from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination, search_counter
 
-from accounts.authentication import AccessTokenAuthentication
+from accounts.authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from Permissions import IsSuperuser
 
 from . import tasks
@@ -59,25 +57,24 @@ class ItemsList(GenericAPIView):  # or ListAPIView
     pagination_class = ItemsPagination  # LimitOffsetPagination???
 
     def get(self, request, channel_id):
-        all_items, ItemClass = self.get_queryset()
+        try:
+            channel = Channel.objects.get(id=self.kwargs["channel_id"])
+            ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
+            all_items = ItemClass.objects.filter(channel=channel)
+
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
         paginator = self.pagination_class()
         paginated_items = paginator.paginate_queryset(queryset=all_items, request=request, view=self)
         ItemSerializer = item_serializer_mapper(ItemClass.__name__)
-        ser_items_data = ItemSerializer(paginated_items, many=True)
-
-        return Response(ser_items_data.data, status=status.HTTP_200_OK)
-
-    def get_queryset(self):
-
         try:
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+            user, _ = RefreshTokenAuthentication().authenticate(request)
+            request.user = user
+        except:
+            pass
 
-        ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
-        all_items = ItemClass.objects.filter(channel=channel)
-
-        return all_items, ItemClass
+        ser_items_data = ItemSerializer(paginated_items, many=True, context={"request": request})
+        return Response(ser_items_data.data, status=status.HTTP_200_OK)
 
 
 class GetChannel(RetrieveAPIView):
@@ -90,18 +87,13 @@ class GetItem(APIView):
     def get(self, request, channel_id, item_id):
         try:
             channel = Channel.objects.get(id=channel_id)
-        except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
-
-        ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
-        try:
+            ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
             item = ItemClass.objects.get(id=item_id)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
         ItemSerializer = item_serializer_mapper(ItemClass.__name__)
-
-        ser_item = ItemSerializer(item)
+        ser_item = ItemSerializer(item, context={"request": request})
 
         return Response(ser_item.data, status=status.HTTP_200_OK)
 
@@ -121,30 +113,16 @@ class SearchView(APIView):
         news_search_results = News.objects.select_related("channel").filter(Q(title__icontains=search_query)).distinct()
 
         channel_id_set = set(map(lambda x: x[0], channel_search_results.values_list("id")))
-        for channel in channel_id_set:
-            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel)
-            search_count_obj.count += 1
-            search_count_obj.save()
-
         channel_id_set_for_episode_search = set(map(lambda x: x[0], episode_search_results.values_list("channel")))
-        channel_id_set_for_episode_search_difference = channel_id_set_for_episode_search - channel_id_set
-        for channel_id in channel_id_set_for_episode_search_difference:
-            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel_id)
-            search_count_obj.count += 1
-            search_count_obj.save()
-            channel_id_set.add(channel_id)
-
         channel_id_set_for_news_search = set(map(lambda x: x[0], episode_search_results.values_list("channel")))
-        channel_id_set_for_news_search_difference = channel_id_set_for_news_search - channel_id_set
-        for channel_id in channel_id_set_for_news_search_difference:
-            search_count_obj, created = SearchCount.objects.get_or_create(channel=channel_id)
-            search_count_obj.count += 1
-            search_count_obj.save()
-            channel_id_set.add(channel_id)
 
-        channel_search_results_serialized = ChannelSerializer(channel_search_results, many=True)
-        episode_search_results_serialized = EpisodeSerializer(episode_search_results, many=True)
-        news_search_results_serialized = NewsSerializer(news_search_results, many=True)
+        channel_id_set = channel_id_set | channel_id_set_for_episode_search | channel_id_set_for_news_search
+        search_counter(channel_id_set)
+
+        context = {"request": request}
+        channel_search_results_serialized = ChannelSerializer(channel_search_results, many=True, context=context)
+        episode_search_results_serialized = EpisodeSerializer(episode_search_results, many=True, context=context)
+        news_search_results_serialized = NewsSerializer(news_search_results, many=True, context=context)
 
         data = {
             "channel_search_results": channel_search_results_serialized.data,

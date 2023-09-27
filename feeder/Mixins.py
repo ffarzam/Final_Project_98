@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from interactions.models import Like
+from interactions.models import Bookmark, Like
 
 
 class ItemsMixin:
@@ -16,3 +16,27 @@ class ItemsMixin:
 
     def __str__(self):
         return f'RSS Feed: {self.channel} || {self.__class__.__name__}: {self.title}'
+
+
+class BookmarkMixin:
+
+    def get_is_bookmarked(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Bookmark.objects.filter(user=user,
+                                           content_type=ContentType.objects.get(model=obj.__class__.__name__.lower()),
+                                           object_id=obj.id).exists()
+        return False
+
+
+class LikeMixin:
+    def get_is_liked(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Like.objects.filter(user=user,
+                                       content_type=ContentType.objects.get(model=obj.__class__.__name__.lower()),
+                                       object_id=obj.id).exists()
+        return False
+
+    def get_liked_count(self, obj):
+        return obj.number_of_likes

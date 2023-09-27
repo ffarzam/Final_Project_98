@@ -40,6 +40,7 @@ class Channel(models.Model):
     author = models.TextField(null=True, blank=True)
     owner = models.CharField(max_length=250, null=True, blank=True)
     owner_email = models.EmailField(null=True, blank=True)
+    last_item_guid = models.TextField(null=True, blank=True)
 
     # class Meta:   #must be asked
     #     indexes = [
@@ -56,7 +57,7 @@ class Episode(ItemsMixin, models.Model):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     description = models.TextField()
     published_date = models.DateTimeField()
-    guid = models.TextField()
+    guid = models.TextField(unique=True)
     audio_file_url = models.URLField(max_length=500)
     image_file_url = models.URLField(max_length=500, null=True, blank=True)
     duration = models.CharField(max_length=25, null=True, blank=True)
@@ -68,7 +69,7 @@ class News(ItemsMixin, models.Model):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     link = models.URLField()
     source = models.URLField(null=True, blank=True)
-    guid = models.CharField(max_length=255)
+    guid = models.CharField(max_length=255, unique=True)
     published_date = models.DateTimeField(null=True, blank=True)
     image_file_url = models.URLField(max_length=500, null=True, blank=True)
 

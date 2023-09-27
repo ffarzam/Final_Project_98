@@ -165,8 +165,8 @@ class ChangePasswordView(UpdateAPIView):
     serializer_class = ChangePasswordSerializer
 
     def patch(self, request, *args, **kwargs):
-        instance = self.request.user
-        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        instance = request.user
+        serializer = self.serializer_class(instance, data=request.data, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response({"message": "Password has been successfully updated"})
