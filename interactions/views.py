@@ -147,3 +147,19 @@ class UserNewsLikeList(ListAPIView):
         id_list = map(lambda x: x[0], object_id_tuple_list)
         return News.objects.filter(id__in=id_list)
 
+
+class BookmarkChannel(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        channel_id = request.data.get("channel_id")
+
+        try:
+            channel = Channel.objects.get(id=channel_id)
+            Bookmark.objects.create(user=self.request.user, content_type=ContentType.objects.get(model="channel"),
+                                    object_id=channel.id)
+            return Response({'success': "Bookmark Done"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
