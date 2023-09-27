@@ -80,3 +80,15 @@ class RecommendationView(APIView):
         ser_data = ChannelSerializer(flatList, many=True, context={"request": request})
 
         return Response(ser_data.data, status=status.HTTP_200_OK)
+
+
+class CreateCommentView(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        content = request.data.get("content")
+        channel_id = request.data.get("channel_id")
+        item_id = request.data.get("item_id")
+        create_comment.delay(content, channel_id, item_id, request.user.id)
+        return Response({'success': "comment will be submitted"}, status=status.HTTP_200_OK)
