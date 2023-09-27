@@ -118,3 +118,19 @@ class CommentListView(APIView):
         ser_items_data = CommentSerializer(paginated_items, many=True)
 
         return Response(ser_items_data.data, status=status.HTTP_200_OK)
+
+
+class UserEpisodeLikeList(ListAPIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    pagination_class = UserLikeListPagination
+    serializer_class = EpisodeSerializer
+
+    def get_queryset(self):
+        object_id_tuple_list = Like.objects.filter(user=self.request.user,
+                                                   content_type=ContentType.objects.get(model="episode")).values_list(
+            "object_id")
+        id_list = map(lambda x: x[0], object_id_tuple_list)
+        return Episode.objects.filter(id__in=id_list)
+
+
