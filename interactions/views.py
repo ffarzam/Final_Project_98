@@ -92,3 +92,29 @@ class CreateCommentView(APIView):
         item_id = request.data.get("item_id")
         create_comment.delay(content, channel_id, item_id, request.user.id)
         return Response({'success': "comment will be submitted"}, status=status.HTTP_200_OK)
+
+
+class CommentListView(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    pagination_class = CommentsPagination
+
+    def get(self, request):
+        channel_id = request.data.get("channel_id")
+        item_id = request.data.get("item_id")
+        try:
+            channel = Channel.objects.get(id=channel_id)
+            ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
+            item = ItemClass.objects.filter(channel=channel).get(id=item_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        content_type_obj = item.get_content_type_obj
+        all_comments = Comment.objects.filter(content_type=content_type_obj,
+                                              object_id=item.id, is_confirmed=True).order_by("-comment_at")
+
+        paginator = self.pagination_class()
+        paginated_items = paginator.paginate_queryset(queryset=all_comments, request=request, view=self)
+        ser_items_data = CommentSerializer(paginated_items, many=True)
+
+        return Response(ser_items_data.data, status=status.HTTP_200_OK)
