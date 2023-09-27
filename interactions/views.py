@@ -163,3 +163,17 @@ class BookmarkChannel(APIView):
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
+
+class UserBookmarkChannelList(ListAPIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    pagination_class = ChannelPagination
+    serializer_class = ChannelSerializer
+
+    def get_queryset(self):
+        object_id_tuple_list = Like.objects.filter(user=self.request.user,
+                                                   content_type=ContentType.objects.get(model="channel")).values_list(
+            "object_id")
+        id_list = map(lambda x: x[0], object_id_tuple_list)
+        return Channel.objects.filter(id__in=id_list)
+
