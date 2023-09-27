@@ -134,3 +134,16 @@ class UserEpisodeLikeList(ListAPIView):
         return Episode.objects.filter(id__in=id_list)
 
 
+class UserNewsLikeList(ListAPIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    pagination_class = UserLikeListPagination
+    serializer_class = NewsSerializer
+
+    def get_queryset(self):
+        object_id_tuple_list = Like.objects.filter(user=self.request.user,
+                                                   content_type=ContentType.objects.get(model="news")).values_list(
+            "object_id")
+        id_list = map(lambda x: x[0], object_id_tuple_list)
+        return News.objects.filter(id__in=id_list)
+
