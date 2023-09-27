@@ -177,3 +177,36 @@ class UserBookmarkChannelList(ListAPIView):
         id_list = map(lambda x: x[0], object_id_tuple_list)
         return Channel.objects.filter(id__in=id_list)
 
+
+class BookmarkItem(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        action = request.data.get("action")
+        channel_id = request.data.get("channel_id")
+        item_id = request.data.get("item_id")
+
+        try:
+            channel = Channel.objects.get(id=channel_id)
+            ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
+            item = ItemClass.objects.get(id=item_id)
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        content_type_obj = item.get_content_type_obj
+        bookmark_query = Bookmark.objects.filter(content_type=content_type_obj, object_id=item.id, user=request.user)
+
+        if action == "unsave" and bookmark_query.exists():
+            bookmark_query.delete()
+            message = "Bookmark Deleted"
+
+        elif action == "save" and not bookmark_query.exists():
+            Bookmark.objects.create(content_object=item, user=request.user)
+            message = "Bookmark Done"
+
+        else:
+            return Response({'error': "Action Undetected"}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'success': message}, status=status.HTTP_200_OK)
+
