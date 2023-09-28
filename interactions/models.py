@@ -3,6 +3,8 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
+from feeder.models import Episode
+
 
 class Like(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -46,3 +48,15 @@ class Recommendation(models.Model):
 
     def __str__(self):
         return f"{self.user} liked {self.category} {self.count} times"
+
+
+class EpisodeTrace(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    episode = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    seconds_listened = models.PositiveIntegerField()
+
+
+class NewsRead(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    news = models.ForeignKey(Episode, on_delete=models.CASCADE)
+    is_read = models.BooleanField(default=False)
