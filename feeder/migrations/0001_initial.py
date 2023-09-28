@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import feeder.Mixins
+import feeder.mixins
 
 
 class Migration(migrations.Migration):
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
                 ('image_file_url', models.URLField(blank=True, max_length=500, null=True)),
                 ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='feeder.channel')),
             ],
-            bases=(feeder.Mixins.ItemsMixin, models.Model),
+            bases=(feeder.mixins.ItemsMixin, models.Model),
         ),
         migrations.CreateModel(
             name='Episode',
@@ -90,7 +90,7 @@ class Migration(migrations.Migration):
                 ('explicit', models.CharField(blank=True, max_length=10, null=True)),
                 ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='feeder.channel')),
             ],
-            bases=(feeder.Mixins.ItemsMixin, models.Model),
+            bases=(feeder.mixins.ItemsMixin, models.Model),
         ),
         migrations.AddField(
             model_name='channel',
