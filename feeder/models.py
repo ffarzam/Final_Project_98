@@ -1,6 +1,6 @@
 from django.db import models
 
-from .Mixins import ItemsMixin
+from .mixins import ItemsMixin
 
 
 # Create your models here.

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .Mixins import BookmarkMixin, LikeMixin
+from .mixins import BookmarkMixin, LikeMixin
 from .models import Channel, Episode, News
 
 
