@@ -13,6 +13,7 @@ from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination, s
 
 from accounts.authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from Permissions import IsSuperuser
+from interactions.models import NewsRead, EpisodeTrace
 
 from . import tasks
 
@@ -58,7 +59,7 @@ class ItemsList(GenericAPIView):  # or ListAPIView
 
     def get(self, request, channel_id):
         try:
-            channel = Channel.objects.get(id=self.kwargs["channel_id"])
+            channel = Channel.objects.get(id=channel_id)
             ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
             all_items = ItemClass.objects.filter(channel=channel)
 
@@ -81,6 +82,16 @@ class GetChannel(RetrieveAPIView):
     queryset = Channel.objects.all()
     serializer_class = ChannelSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            user, _ = RefreshTokenAuthentication().authenticate(request)
+            request.user = user
+        except:
+            pass
+        serializer = self.serializer_class(instance, context={"request": request})
+        return Response(serializer.data)
+
 
 class GetItem(APIView):
 
@@ -89,6 +100,14 @@ class GetItem(APIView):
             channel = Channel.objects.get(id=channel_id)
             ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
             item = ItemClass.objects.get(id=item_id)
+            try:
+                user, _ = RefreshTokenAuthentication().authenticate(request)
+                request.user = user
+                if isinstance(item, News):
+                    NewsRead(user=user, news=item)
+            except:
+                pass
+
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
@@ -131,3 +150,22 @@ class SearchView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+class SaveListenEpisodeSeconds(APIView):
+
+    def post(self, request):
+        episode_id = request.data.get('episode_id')
+        seconds = request.data.get('seconds')
+        try:
+            episode = Episode.objects.get(id=episode_id)
+            try:
+                user, _ = RefreshTokenAuthentication().authenticate(request)
+                request.user = user
+                EpisodeTrace(episode=episode, user=user, seconds_listened=seconds)
+            except:
+                pass
+        except Exception as e:
+            return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"message": "Saved!"}, status=status.HTTP_201_CREATED)

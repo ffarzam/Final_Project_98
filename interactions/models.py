@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
-from feeder.models import Episode
+from feeder.models import Episode, News
 
 
 class Like(models.Model):
@@ -58,5 +58,4 @@ class EpisodeTrace(models.Model):
 
 class NewsRead(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    news = models.ForeignKey(Episode, on_delete=models.CASCADE)
-    is_read = models.BooleanField(default=False)
+    news = models.ForeignKey(News, on_delete=models.CASCADE)

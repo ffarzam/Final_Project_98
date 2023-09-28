@@ -28,9 +28,8 @@ class NewsSerializer(BookmarkMixin, LikeMixin, serializers.ModelSerializer):
         def get_is_read(self, obj):
             user = self.context['request'].user
             if user.is_authenticated:
-                qs = NewsRead.objects.filter(user=user, news=obj)
-                if qs.exists():
-                    return qs.get().is_read
+                return NewsRead.objects.filter(user=user, news=obj).exists()
+
             return False
 
 
