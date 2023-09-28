@@ -156,10 +156,12 @@ REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
 REDIS_DEFAULT_TTL = 60 * 60 * 24 * 14  # 14 Days
 REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 14 Day
+REDIS_USERNAME=os.environ.get('REDIS_USERNAME')
+REDIS_PASSWORD=os.environ.get('REDIS_PASSWORD')
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1',
         'TIMEOUT': REDIS_DEFAULT_TTL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -168,7 +170,7 @@ CACHES = {
 
     'auth': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/2',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2',
         'TIMEOUT': REDIS_AUTH_TTL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -177,7 +179,7 @@ CACHES = {
 
     'hit_count': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/3',
 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -186,7 +188,7 @@ CACHES = {
 
     'celery_broker': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/4',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/4',
 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -195,7 +197,7 @@ CACHES = {
 
     'celery_backends': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/5',
+        'LOCATION': f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/5',
 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -204,14 +206,15 @@ CACHES = {
 
 }
 
+
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
 
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
 
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/5'
+CELERY_BROKER_URL = f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}/4'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}/5'
 CELERY_TIMEZONE = 'UTC'
 
 # TODO:
