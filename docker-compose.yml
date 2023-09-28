@@ -3,8 +3,9 @@ services:
     container_name: postgres
     image: postgres:16.0
     environment:
-      - POSTGRES_USER=${USER}
-      - POSTGRES_PASSWORD=${PASSWORD}
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+      POSTGRES_DB: ${NAME}
     networks:
       - main
     ports:
@@ -65,8 +66,6 @@ services:
     volumes:
       - .:/code/
 
-
-
   celery_beat:
     container_name: celery_beat
     build: .
@@ -92,9 +91,6 @@ services:
     volumes:
       - flower_data:/flower_data
     restart: always
-
-
-
 
 networks:
   main:
