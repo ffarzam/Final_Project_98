@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'feeder',
     'interactions',
     'pages',
-    'drf_spectacular'
+    'drf_spectacular',
+    'minio_storage'
 
 ]
 
