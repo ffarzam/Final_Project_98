@@ -23,14 +23,14 @@ class NewsSerializer(BookmarkMixin, LikeMixin, serializers.ModelSerializer):
     class Meta:
         model = News
         fields = ["id", "title", "channel", "published_date", "link", "source", "image_file_url", "guid", "is_liked",
-                  "is_bookmarked", "liked_count"]
+                  "is_bookmarked", "liked_count", "is_read"]
 
-        def get_is_read(self, obj):
-            user = self.context['request'].user
-            if user.is_authenticated:
-                return NewsRead.objects.filter(user=user, news=obj).exists()
+    def get_is_read(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return NewsRead.objects.filter(user=user, news=obj).exists()
 
-            return False
+        return False
 
 
 class EpisodeSerializer(BookmarkMixin, LikeMixin, serializers.ModelSerializer):
@@ -42,7 +42,8 @@ class EpisodeSerializer(BookmarkMixin, LikeMixin, serializers.ModelSerializer):
     class Meta:
         model = Episode
         fields = ["id", "title", "subtitle", "channel", "published_date", "description", "image_file_url", "guid",
-                  "audio_file_url", "duration", "explicit", "is_liked", "is_bookmarked", "liked_count"]
+                  "audio_file_url", "duration", "explicit", "is_liked", "is_bookmarked", "liked_count",
+                  "seconds_listened"]
 
     def get_seconds_listened(self, obj):
         user = self.context['request'].user

@@ -9,7 +9,8 @@ from django.db.models import Q, F
 from .models import Channel, Episode, News
 from .parsers import item_model_mapper
 from .serializer import ChannelSerializer, EpisodeSerializer, NewsSerializer
-from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination, search_counter
+from .utils import item_serializer_mapper, ChannelPagination, ItemsPagination, search_counter, \
+    convert_duration_to_seconds
 
 from accounts.authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from Permissions import IsSuperuser
@@ -104,7 +105,9 @@ class GetItem(APIView):
                 user, _ = RefreshTokenAuthentication().authenticate(request)
                 request.user = user
                 if isinstance(item, News):
-                    NewsRead(user=user, news=item)
+                    news_read_qs = NewsRead.objects.filter(user=user, news=item)
+                    if not news_read_qs.exists():
+                        NewsRead.objects.create(user=user, news=item)
             except:
                 pass
 
@@ -159,10 +162,19 @@ class SaveListenEpisodeSeconds(APIView):
         seconds = request.data.get('seconds')
         try:
             episode = Episode.objects.get(id=episode_id)
+            episode_duration_in_seconds = convert_duration_to_seconds(episode.duration)
+            if seconds > episode_duration_in_seconds:
+                return Response({"error": "Invalid Input"}, status=status.HTTP_400_BAD_REQUEST)
             try:
                 user, _ = RefreshTokenAuthentication().authenticate(request)
                 request.user = user
-                EpisodeTrace(episode=episode, user=user, seconds_listened=seconds)
+                episode_trace_qs = EpisodeTrace.objects.filter(episode=episode, user=user)
+                if episode_trace_qs.exists():
+                    episode_trace = episode_trace_qs.get()
+                    episode_trace.seconds_listened = seconds
+                    episode_trace.save()
+                else:
+                    EpisodeTrace.objects.create(episode=episode, user=user, seconds_listened=seconds)
             except:
                 pass
         except Exception as e:
