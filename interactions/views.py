@@ -12,7 +12,7 @@ from accounts.authentication import AccessTokenAuthentication
 from .models import Like, Recommendation, Comment, Bookmark
 from .seializers import CommentSerializer
 from .tasks import create_comment
-from .utils import CommentsPagination, recommendation_counter, UserLikeListPagination
+from .utils import CommentsPagination, recommendation_counter, UserLikeListPagination, bookmark_operator
 
 from feeder.models import Channel, Episode, News
 from feeder.parsers import item_model_mapper
@@ -46,6 +46,8 @@ class LikeView(APIView):
         content_type_obj = item.get_content_type_obj
         like_query = Like.objects.filter(content_type=content_type_obj, object_id=item.id, user=request.user)
 
+        response_status = status.HTTP_200_OK
+        state = "success"
         if action == "unlike" and like_query.exists():
             like_query.delete()
             recommendation_counter(request.user, categories)
@@ -55,12 +57,15 @@ class LikeView(APIView):
             Like.objects.create(content_object=item, user=request.user)
             recommendation_counter(request.user, categories, flag=True)
             message = "Like Done"
+
         else:
-            return Response({'error': "Action Undetected"}, status=status.HTTP_400_BAD_REQUEST)
+            state = "error"
+            message = "Action Undetected"
+            response_status = status.HTTP_400_BAD_REQUEST
 
         count = item.number_of_likes
 
-        return Response({'success': message, 'like_count': count}, status=status.HTTP_200_OK)
+        return Response({state: message, 'like_count': count}, status=response_status)
 
 
 class RecommendationView(APIView):
@@ -70,13 +75,16 @@ class RecommendationView(APIView):
     def get(self, request):
         user = request.user
         max_count = Recommendation.objects.aggregate(max_count=Max("count"))["max_count"]
-        recommendation_query = Recommendation.objects.filter(user=user, count=max_count)
-        lst = []
-        for item in recommendation_query:
-            channel = Channel.objects.filter(xml_link__categories=item.category)
-            lst.append(list(channel))
+        flatList = []
+        if max_count != 0:
+            recommendation_query = Recommendation.objects.filter(user=user, count=max_count)
+            lst = []
+            for item in recommendation_query:
+                channel = Channel.objects.filter(xml_link__categories=item.category)
+                lst.append(list(channel))
 
-        flatList = set(sum(lst, []))
+            flatList = set(sum(lst, []))
+
         ser_data = ChannelSerializer(flatList, many=True, context={"request": request})
 
         return Response(ser_data.data, status=status.HTTP_200_OK)
@@ -99,9 +107,7 @@ class CommentListView(APIView):
     permission_classes = (IsAuthenticated,)
     pagination_class = CommentsPagination
 
-    def get(self, request):
-        channel_id = request.data.get("channel_id")
-        item_id = request.data.get("item_id")
+    def get(self, request, channel_id, item_id):
         try:
             channel = Channel.objects.get(id=channel_id)
             ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
@@ -130,7 +136,7 @@ class UserEpisodeLikeList(ListAPIView):
         object_id_tuple_list = Like.objects.filter(user=self.request.user,
                                                    content_type=ContentType.objects.get(model="episode")).values_list(
             "object_id")
-        id_list = map(lambda x: x[0], object_id_tuple_list)
+        id_list = list(map(lambda x: x[0], object_id_tuple_list))
         return Episode.objects.filter(id__in=id_list)
 
 
@@ -144,7 +150,7 @@ class UserNewsLikeList(ListAPIView):
         object_id_tuple_list = Like.objects.filter(user=self.request.user,
                                                    content_type=ContentType.objects.get(model="news")).values_list(
             "object_id")
-        id_list = map(lambda x: x[0], object_id_tuple_list)
+        id_list = list(map(lambda x: x[0], object_id_tuple_list))
         return News.objects.filter(id__in=id_list)
 
 
@@ -154,14 +160,19 @@ class BookmarkChannel(APIView):
 
     def post(self, request):
         channel_id = request.data.get("channel_id")
-
+        action = request.data.get("action")
         try:
             channel = Channel.objects.get(id=channel_id)
-            Bookmark.objects.create(user=self.request.user, content_type=ContentType.objects.get(model="channel"),
-                                    object_id=channel.id)
-            return Response({'success': "Bookmark Done"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+        bookmark_query = Bookmark.objects.filter(user=request.user,
+                                                 content_type=ContentType.objects.get(model="channel"),
+                                                 object_id=channel.id)
+
+        state, message, response_status = bookmark_operator(action, bookmark_query, request.user, channel)
+
+        return Response({state: message}, status=response_status)
 
 
 class UserBookmarkChannelList(ListAPIView):
@@ -171,10 +182,10 @@ class UserBookmarkChannelList(ListAPIView):
     serializer_class = ChannelSerializer
 
     def get_queryset(self):
-        object_id_tuple_list = Like.objects.filter(user=self.request.user,
-                                                   content_type=ContentType.objects.get(model="channel")).values_list(
-            "object_id")
-        id_list = map(lambda x: x[0], object_id_tuple_list)
+        object_id_tuple_list = Bookmark.objects.filter(user=self.request.user, content_type=ContentType.objects.get(
+            model="channel")).values_list("object_id")
+
+        id_list = list(map(lambda x: x[0], object_id_tuple_list))
         return Channel.objects.filter(id__in=id_list)
 
 
@@ -197,18 +208,9 @@ class BookmarkItem(APIView):
         content_type_obj = item.get_content_type_obj
         bookmark_query = Bookmark.objects.filter(content_type=content_type_obj, object_id=item.id, user=request.user)
 
-        if action == "unsave" and bookmark_query.exists():
-            bookmark_query.delete()
-            message = "Bookmark Deleted"
+        state, message, response_status = bookmark_operator(action, bookmark_query, request.user, item)
 
-        elif action == "save" and not bookmark_query.exists():
-            Bookmark.objects.create(content_object=item, user=request.user)
-            message = "Bookmark Done"
-
-        else:
-            return Response({'error': "Action Undetected"}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({'success': message}, status=status.HTTP_200_OK)
+        return Response({state: message}, status=response_status)
 
 
 class UserBookmarkEpisodeList(ListAPIView):
@@ -218,10 +220,9 @@ class UserBookmarkEpisodeList(ListAPIView):
     serializer_class = EpisodeSerializer
 
     def get_queryset(self):
-        object_id_tuple_list = Like.objects.filter(user=self.request.user,
-                                                   content_type=ContentType.objects.get(model="episode")).values_list(
-            "object_id")
-        id_list = map(lambda x: x[0], object_id_tuple_list)
+        object_id_tuple_list = Bookmark.objects.filter(user=self.request.user, content_type=ContentType.objects.get(
+            model="episode")).values_list("object_id")
+        id_list = list(map(lambda x: x[0], object_id_tuple_list))
         return Episode.objects.filter(id__in=id_list)
 
 
@@ -232,8 +233,8 @@ class UserBookmarkNewsList(ListAPIView):
     serializer_class = NewsSerializer
 
     def get_queryset(self):
-        object_id_tuple_list = Like.objects.filter(user=self.request.user,
-                                                   content_type=ContentType.objects.get(model="news")).values_list(
+        object_id_tuple_list = Bookmark.objects.filter(user=self.request.user,
+                                                       content_type=ContentType.objects.get(model="news")).values_list(
             "object_id")
-        id_list = map(lambda x: x[0], object_id_tuple_list)
+        id_list = list(map(lambda x: x[0], object_id_tuple_list))
         return News.objects.filter(id__in=id_list)

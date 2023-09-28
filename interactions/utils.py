@@ -1,6 +1,7 @@
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 
-from interactions.models import Recommendation
+from interactions.models import Recommendation, Bookmark
 
 
 class CommentsPagination(PageNumberPagination):
@@ -20,3 +21,22 @@ def recommendation_counter(user, categories, flag=False):
             recommendation_obj.count -= 1
 
         recommendation_obj.save()
+
+
+def bookmark_operator(action, bookmark_query, user, item):
+    response_status = status.HTTP_200_OK
+    state = "success"
+    if action == "unsave" and bookmark_query.exists():
+        bookmark_query.delete()
+        message = "Bookmark Deleted"
+
+    elif action == "save" and not bookmark_query.exists():
+        Bookmark.objects.create(user=user, content_object=item)
+        message = "Bookmark Done"
+
+    else:
+        state = "error"
+        message = "Action Undetected"
+        response_status = status.HTTP_400_BAD_REQUEST
+
+    return state, message, response_status

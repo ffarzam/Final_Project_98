@@ -32,9 +32,9 @@ def convert_duration_to_seconds(arg):
     if ":" in arg:
         time_params = arg.split(":")
         if len(time_params) == 2:
-            seconds = time_params[0] * 60 + time_params[1]
+            seconds = int(time_params[0]) * 60 + int(time_params[1])
         else:
-            seconds = time_params[0] * 60 * 60 + time_params[1] * 60 + time_params[2]
+            seconds = int(time_params[0]) * 60 * 60 + int(time_params[1]) * 60 + int(time_params[2])
     else:
         seconds = int(arg)
     return seconds
