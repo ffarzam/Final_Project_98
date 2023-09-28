@@ -39,16 +39,16 @@ services:
     volumes:
       - redis_data:/data
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:3.12.6
-    networks:
-      - main
-    ports:
-      - 5672:5672
-    volumes:
-      - rabbitmq_data:/rabbitmq_data
-    restart: always
+#  rabbitmq:
+#    container_name: rabbitmq
+#    image: rabbitmq:3.12.6
+#    networks:
+#      - main
+#    ports:
+#      - 5672:5672
+#    volumes:
+#      - rabbitmq_data:/rabbitmq_data
+#    restart: always
 
   celery:
     container_name: celery
@@ -57,7 +57,7 @@ services:
     depends_on:
       - app
       - redis
-      - rabbitmq
+#      - rabbitmq
     environment:
       - C_FORCE_ROOT="true"
     networks:
@@ -69,9 +69,11 @@ services:
   celery_beat:
     container_name: celery_beat
     build: .
-    command: celery -A config beat -l info
+    command: celery -A config beat -l INFO
     depends_on:
       - celery
+    networks:
+      - main
     restart: always
     volumes:
       - .:/code/
@@ -99,4 +101,4 @@ volumes:
   postgres_data:
   redis_data:
   flower_data:
-  rabbitmq_data:
+#  rabbitmq_data:
