@@ -1,0 +1,104 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16.0
+    environment:
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+      POSTGRES_DB: ${NAME}
+    networks:
+      - main
+    ports:
+      - 5432:5432
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    # command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    container_name: app
+    volumes:
+      - .:/code/
+    networks:
+      - main
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+    restart: always
+
+  redis:
+    container_name: redis
+    image: redis:7.2
+    networks:
+      - main
+    ports:
+      - 6379:6379
+    restart: always
+    volumes:
+      - redis_data:/data
+
+#  rabbitmq:
+#    container_name: rabbitmq
+#    image: rabbitmq:3.12.6
+#    networks:
+#      - main
+#    ports:
+#      - 5672:5672
+#    volumes:
+#      - rabbitmq_data:/rabbitmq_data
+#    restart: always
+
+  celery:
+    container_name: celery
+    build: .
+    command: celery -A config worker -l INFO
+    depends_on:
+      - app
+      - redis
+#      - rabbitmq
+    environment:
+      - C_FORCE_ROOT="true"
+    networks:
+      - main
+    restart: always
+    volumes:
+      - .:/code/
+
+  celery_beat:
+    container_name: celery_beat
+    build: .
+    command: celery -A config beat -l INFO
+    depends_on:
+      - celery
+    networks:
+      - main
+    restart: always
+    volumes:
+      - .:/code/
+
+  flower:
+    image: mher/flower:latest
+    container_name: flower
+    command: celery -A config flower
+    networks:
+      - main
+    ports:
+      - 5555:5555
+    depends_on:
+      - app
+      - redis
+      - celery
+    volumes:
+      - flower_data:/flower_data
+    restart: always
+
+networks:
+  main:
+
+volumes:
+  postgres_data:
+  redis_data:
+  flower_data:
+#  rabbitmq_data:

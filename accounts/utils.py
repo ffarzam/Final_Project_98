@@ -3,6 +3,8 @@ import jwt
 from django.conf import settings
 from uuid import uuid4
 
+from django.core.mail import EmailMessage
+
 
 def generate_access_token(user_id, jti):
     access_token_payload = {
@@ -42,7 +44,7 @@ def encode_jwt(payload):
     return token
 
 
-def cache_key_or_value_parser(arg):
+def cache_key_parser(arg):
     return arg.split(" || ")
 
 
@@ -51,4 +53,13 @@ def cache_key_setter(user_id, jti):
 
 
 def cache_value_setter(request):
-    return f"{request.META['HTTP_USER_AGENT']} || {request.META['USERNAME']}"
+    return request.META.get('HTTP_USER_AGENT', 'UNKNOWN')
+
+
+def send_email(data):
+    email = EmailMessage(
+        subject=data['email_subject'],
+        body=data["email_body"],
+        to=[data["to_email"]]
+    )
+    email.send()
