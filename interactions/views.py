@@ -74,7 +74,7 @@ class RecommendationView(APIView):
 
     def get(self, request):
         user = request.user
-        max_count = Recommendation.objects.aggregate(max_count=Max("count"))["max_count"]
+        max_count = Recommendation.objects.filter(user=user).aggregate(max_count=Max("count"))["max_count"]
         flatList = []
         if max_count != 0:
             recommendation_query = Recommendation.objects.filter(user=user, count=max_count)

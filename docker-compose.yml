@@ -1,7 +1,7 @@
 services:
   postgres:
     container_name: postgres
-    image: postgres:16.0
+    image: postgres:14.0
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
@@ -16,7 +16,6 @@ services:
 
   app:
     build: .
-    # command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     container_name: app
     volumes:
       - .:/code/
@@ -39,16 +38,18 @@ services:
     volumes:
       - redis_data:/data
 
-#  rabbitmq:
-#    container_name: rabbitmq
-#    image: rabbitmq:3.12.6
-#    networks:
-#      - main
-#    ports:
-#      - 5672:5672
-#    volumes:
-#      - rabbitmq_data:/rabbitmq_data
-#    restart: always
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.12.6
+    networks:
+      - main
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq
+    restart: always
 
   celery:
     container_name: celery
@@ -57,7 +58,6 @@ services:
     depends_on:
       - app
       - redis
-#      - rabbitmq
     environment:
       - C_FORCE_ROOT="true"
     networks:
@@ -79,16 +79,14 @@ services:
       - .:/code/
 
   flower:
-    image: mher/flower:latest
     container_name: flower
+    build: .
     command: celery -A config flower
     networks:
       - main
     ports:
       - 5555:5555
     depends_on:
-      - app
-      - redis
       - celery
     volumes:
       - flower_data:/flower_data
@@ -101,4 +99,5 @@ volumes:
   postgres_data:
   redis_data:
   flower_data:
-#  rabbitmq_data:
+  rabbitmq_data:
+  rabbitmq_log:
