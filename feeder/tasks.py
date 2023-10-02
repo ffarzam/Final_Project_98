@@ -1,4 +1,6 @@
-from celery import shared_task, Task, group
+import itertools
+
+from celery import shared_task, Task, group, chain
 from django.db import transaction
 
 from .models import XmlLink, Channel
@@ -11,22 +13,18 @@ class BaseTaskWithRetry(Task):
     retry_backoff = True
     retry_jitter = False
     task_acks_late = True
-    # task_concurrency = 4
-    # worker_prefetch_multiplier = 1
+    worker_concurrency = 5
+    worker_prefetch_multiplier = 1
 
 
 @shared_task(task_time_limit=600)
 def update_all_rss():
-    for xml_link_obj in XmlLink.objects.all():
-        update_single_rss.delay(xml_link_obj.xml_link)
-
-
-# @shared_task(task_time_limit=600)
-# def update_all_rss():
-#     xml_links = XmlLink.objects.all().iterator()
-#     tasks = (update_single_rss.s(xml_link_obj.xml_link) for xml_link_obj in xml_links)
-#     result_group = group(tasks)
-#     result_group()
+    CHUNK_SIZE = 5
+    xml_links = XmlLink.objects.all()
+    tasks = (update_single_rss.si(xml_link_obj.xml_link) for xml_link_obj in xml_links)
+    group_chain_list = chunks(tasks, CHUNK_SIZE)
+    work_flow = chain(*group_chain_list)
+    work_flow.apply_async()
 
 
 @shared_task(base=BaseTaskWithRetry, task_time_limit=180)
@@ -60,9 +58,14 @@ def update_single_rss(xml_link):
 
 def create_item(items_info, item_class, channel, last_item_guid_in_db=None):
     first_item = next(items_info, None)
-    if first_item and first_item != last_item_guid_in_db:
+    if first_item and first_item["guid"] != last_item_guid_in_db:
         first_item = item_class.objects.create(**first_item, channel=channel)
         channel.last_item_guid = first_item.guid
         channel.save()
         items = (item_class(**item, channel=channel) for item in items_info)
         item_class.objects.bulk_create(items, ignore_conflicts=True)
+
+
+def chunks(iterator, chunk_size):
+    for first in iterator:
+        yield group(itertools.chain([first], itertools.islice(iterator, chunk_size - 1)))
