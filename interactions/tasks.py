@@ -12,7 +12,7 @@ class BaseTaskWithRetry(Task):
     retry_backoff = True
     retry_jitter = False
     task_acks_late = True
-    task_concurrency = 4
+    worker_concurrency = 4
     worker_prefetch_multiplier = 1
 
 
