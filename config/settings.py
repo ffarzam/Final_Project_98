@@ -176,27 +176,10 @@ CACHES = {
         },
     },
 
-    'hit_count': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
-
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
-
-    'celery_broker': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/4',
-
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
 
     'celery_backends': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/5',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -210,9 +193,12 @@ CACHES = {
 
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
+RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
 
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/5'
+CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}'
+# CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/3'
 CELERY_TIMEZONE = 'Asia/Tehran'
 
 
@@ -224,42 +210,42 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#
+#     "formatters": {
+#         'verbose': {
+#             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+#         },
+#     },
+#
+#     "handlers": {
+#         'console': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#         },
+#
+#         "file": {
+#             'level': 'INFO',
+#             'class': 'logging.handlers.TimedRotatingFileHandler',
+#             'filename': './log/celery_log.log',
+#             'when': 'midnight',
+#             'backupCount': 30,
+#             'formatter': 'verbose'
+#         },
+#     },
+#     "loggers": {
+#         "celery": {
+#             "handlers": ["file", "console"],
+#             "level": "INFO",
+#             'propagate': False
+#         },
+#
+#     },
+# }
 
-    "formatters": {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-    },
-
-    "handlers": {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-        },
-
-        "file": {
-            'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': './log/celery_log.log',
-            'when': 'midnight',
-            'backupCount': 30,
-            'formatter': 'verbose'
-        },
-    },
-    "loggers": {
-        "celery": {
-            "handlers": ["file", "console"],
-            "level": "INFO",
-            'propagate': False
-        },
-
-    },
-}
-
-PASSWORD_RESET_TIMEOUT = 5 * 60  # 50 min
+PASSWORD_RESET_TIMEOUT = 5 * 60  # 5 min
 
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
