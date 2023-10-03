@@ -40,7 +40,7 @@ services:
 
   rabbitmq:
     container_name: rabbitmq
-    image: rabbitmq:3.12.6
+    image: rabbitmq:3-management
     networks:
       - main
     ports:
@@ -58,6 +58,7 @@ services:
     depends_on:
       - app
       - redis
+      - rabbitmq
     environment:
       - C_FORCE_ROOT="true"
     networks:
