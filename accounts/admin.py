@@ -6,3 +6,5 @@ from . import models
 
 
 admin.site.register(models.CustomUser)
+admin.site.register(models.Notification)
+admin.site.register(models.UserNotifications)
