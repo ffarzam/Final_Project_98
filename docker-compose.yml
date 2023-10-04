@@ -1,4 +1,18 @@
 services:
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    networks:
+      - main
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq
+    restart: always
+
   postgres:
     container_name: postgres
     image: postgres:14.0
@@ -23,8 +37,22 @@ services:
       - main
     depends_on:
       - postgres
+      - redis
     ports:
       - 8000:8000
+    restart: always
+
+  rabbitmq_queue:
+    container_name: rabbitmq_queue
+    build: .
+    command: python manage.py launch_queue_listener
+    volumes:
+      - .:/code/
+    networks:
+      - main
+    depends_on:
+      - rabbitmq
+      - app
     restart: always
 
   redis:
@@ -38,27 +66,16 @@ services:
     volumes:
       - redis_data:/data
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:3-management
-    networks:
-      - main
-    ports:
-      - 5672:5672
-      - 15672:15672
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq/
-      - rabbitmq_log:/var/log/rabbitmq
-    restart: always
+
 
   celery:
     container_name: celery
     build: .
     command: celery -A config worker -l INFO
     depends_on:
-      - app
-      - redis
       - rabbitmq
+      - redis
+      - app
     environment:
       - C_FORCE_ROOT="true"
     networks:
@@ -88,7 +105,9 @@ services:
     ports:
       - 5555:5555
     depends_on:
+      - rabbitmq
       - celery
+      - celery_beat
     volumes:
       - flower_data:/flower_data
     restart: always
