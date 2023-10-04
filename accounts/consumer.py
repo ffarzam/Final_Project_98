@@ -16,8 +16,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 def callback(ch, method, property, body):
     body = json.loads(body)
     user = CustomUser.objects.get(username=body["username"])
-    notification = Notification.objects.create(notification=body["message"])
+    notification = Notification.objects.create(notification=body["message"], action=body["routing_key"])
     UserNotifications.objects.create(user=user, notification=notification)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def start_login_consumer():
@@ -46,10 +47,11 @@ def rss_feed_callback(ch, method, property, body):
     channel_id = body["channel_id"]
     content_type_obj = ContentType.objects.get(model="channel")
     qs = Bookmark.objects.filter(content_type=content_type_obj, object_id=channel_id)
+    notification = Notification.objects.create(notification=body["message"])
     for item in qs:
         user = CustomUser.objects.get(id=item.user.id)
-        notification = Notification.objects.create(notification=body["message"])
         UserNotifications.objects.create(user=user, notification=notification)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def start_rss_feed_update_consumer():
