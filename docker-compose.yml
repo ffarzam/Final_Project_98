@@ -66,7 +66,20 @@ services:
     volumes:
       - redis_data:/data
 
-
+  elasticsearch:
+    image: elasticsearch:8.10.1
+    mem_limit: 512m
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: 'true'
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - main
 
   celery:
     container_name: celery
@@ -121,3 +134,4 @@ volumes:
   flower_data:
   rabbitmq_data:
   rabbitmq_log:
+  elasticsearch_data:
