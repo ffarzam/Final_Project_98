@@ -78,9 +78,9 @@ services:
       xpack.security.enabled: 'true'
     ports:
       - 9200:9200
-      - 9300:9300
     networks:
       - main
+    restart: always
 
   kibana:
     image: kibana:8.10.1
@@ -92,6 +92,8 @@ services:
     networks:
       - main
     restart: always
+    volumes:
+      - kibana_data:/usr/share/kibana/data
 
   celery:
     container_name: celery
@@ -147,3 +149,4 @@ volumes:
   rabbitmq_data:
   rabbitmq_log:
   elasticsearch_data:
+  kibana_data:
