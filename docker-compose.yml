@@ -66,7 +66,34 @@ services:
     volumes:
       - redis_data:/data
 
+  elasticsearch:
+    image: elasticsearch:8.10.1
+    container_name: elasticsearch
+    mem_limit: 512m
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: 'true'
+    ports:
+      - 9200:9200
+    networks:
+      - main
+    restart: always
 
+  kibana:
+    image: kibana:8.10.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - main
+    restart: always
+    volumes:
+      - kibana_data:/usr/share/kibana/data
 
   celery:
     container_name: celery
@@ -121,3 +148,5 @@ volumes:
   flower_data:
   rabbitmq_data:
   rabbitmq_log:
+  elasticsearch_data:
+  kibana_data:
