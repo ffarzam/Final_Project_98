@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'feeder',
     'interactions',
     'pages',
-    'drf_spectacular'
+    'drf_spectacular',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
 
 ]
 
@@ -55,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.custom_middleware.APILoggerMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -254,3 +257,10 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
+
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'elasticsearch:9200'
+    },
+}
