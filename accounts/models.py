@@ -29,7 +29,13 @@ class Notification(models.Model):
     is_sent = models.BooleanField(default=False)
     # broadcast_on = models.DateTimeField()
 
+    def __str__(self):
+        return f"{self.notification}"
+
 
 class UserNotifications(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f"{self.user} has notification: {self.notification}"
