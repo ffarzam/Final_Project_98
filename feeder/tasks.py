@@ -6,6 +6,8 @@ from django.db import transaction
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, item_model_mapper, items_parser_mapper
 
+from accounts.publisher import publish
+
 
 class BaseTaskWithRetry(Task):
     autoretry_for = (Exception,)
@@ -49,21 +51,34 @@ def update_single_rss(xml_link):
             with transaction.atomic():
                 Channel.objects.filter(id=channel.id).update(**channel_info)
                 last_item_guid_in_db = channel.last_item_guid
-                create_item(items_info, ItemClass, channel, last_item_guid_in_db=last_item_guid_in_db)
+                flag = create_item(items_info, ItemClass, channel, last_item_guid_in_db=last_item_guid_in_db)
 
-            return {"Message": f"Channel {channel.title} Was Updated"}
+            print("1"*100)
+            print(channel.id)
+            print(type(channel.id))
+            if flag:
+                info = {
+                    "channel_id": channel.id,
+                    "message": f"Channel {channel.title} Has Been Updated",
+                    "routing_key": "rss_feed"
+                }
+                publish(info)
+            return {"Message": f"Channel {channel.title} Has Been Updated"}
 
         return {"Message": f"Channel {channel.title} is Already Updated"}
 
 
 def create_item(items_info, item_class, channel, last_item_guid_in_db=None):
+    flag = False
     first_item = next(items_info, None)
     if first_item and first_item["guid"] != last_item_guid_in_db:
+        flag = True
         first_item = item_class.objects.create(**first_item, channel=channel)
         channel.last_item_guid = first_item.guid
         channel.save()
         items = (item_class(**item, channel=channel) for item in items_info)
         item_class.objects.bulk_create(items, ignore_conflicts=True)
+    return flag
 
 
 def chunks(iterator, chunk_size):
