@@ -21,3 +21,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+class Notification(models.Model):
+    notification = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    is_sent = models.BooleanField(default=False)
+    # broadcast_on = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.notification}"
+
+
+class UserNotifications(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+    notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f"{self.user} has notification: {self.notification}"
