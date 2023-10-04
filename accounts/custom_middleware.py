@@ -1,23 +1,28 @@
-from django_redis import get_redis_connection
+from datetime import datetime
+
+from elasticsearch import Elasticsearch
+from django.conf import settings
 
 
-class HitCountMiddleware:
+class ElasticAPILoggerMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        blacklist = {'admin', "visitors_count", "status", "create", "update"}
 
-        path_blacklist = set(filter(lambda x: request.path.startswith(f"/{x}"), blacklist))
-        if len(path_blacklist) == 0:
-            conn = get_redis_connection('hit_count')
-
-            ip_addr = get_client_ip_address(request)
-
-            conn.sadd('ip', ip_addr)
-
+        log_data = {
+            'timestamp': datetime.now(),
+            'request_method': request.method,
+            'request_path': request.path,
+            'request_ip': get_client_ip_address(request),
+            'request_user_agent': request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
+        }
         response = self.get_response(request)
 
+        log_data['user_id'] = request.user.id if request.user.is_authenticated else None
+        log_data['response_status'] = response.status_code
+        es = Elasticsearch([settings.RABBITMQ_HOS])
+        es.index(index='api_logs', document=log_data)
         return response
 
 
