@@ -27,7 +27,8 @@ class Notification(models.Model):
     notification = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     is_sent = models.BooleanField(default=False)
-    # broadcast_on = models.DateTimeField()
+    action = models.CharField(null=True, blank=True)
+    broadcast_on = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.notification}"
