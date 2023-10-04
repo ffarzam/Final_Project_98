@@ -17,8 +17,7 @@ from .authentication import AccessTokenAuthentication, RefreshTokenAuthenticatio
 from .tasks import send_reset_password_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
     cache_key_parser
-
-from Permissions import UserIsOwner
+from .publisher import publish
 
 
 # Create your views here.
@@ -32,6 +31,13 @@ class UserRegister(APIView):
         ser_data = self.serializer_class(data=request.POST)
         if ser_data.is_valid():
             ser_data.create(ser_data.validated_data)
+            username = ser_data.validated_data["username"]
+            info = {
+                "username": username,
+                "message": f"User with {username} successfully registered",
+                "routing_key": "register"
+            }
+            publish(info)
             return Response(ser_data.data, status=status.HTTP_201_CREATED)
         return Response(ser_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,6 +66,12 @@ class UserLogin(APIView):
             "access": access_token,
             "refresh": refresh_token,
         }
+        info = {
+            "username": user.username,
+            "message": f"New Login Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}",
+            "routing_key": "login"
+        }
+        publish(info)
         return Response(data, status=status.HTTP_201_CREATED)
 
 
