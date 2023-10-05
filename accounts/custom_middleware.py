@@ -21,7 +21,7 @@ class ElasticAPILoggerMiddleware:
 
         log_data['user_id'] = request.user.id if request.user.is_authenticated else None
         log_data['response_status'] = response.status_code
-        es = Elasticsearch([settings.RABBITMQ_HOS])
+        es = Elasticsearch(settings.RABBITMQ_HOS)
         es.index(index='api_logs', document=log_data)
         return response
 
