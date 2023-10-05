@@ -53,9 +53,6 @@ def update_single_rss(xml_link):
                 last_item_guid_in_db = channel.last_item_guid
                 flag = create_item(items_info, ItemClass, channel, last_item_guid_in_db=last_item_guid_in_db)
 
-            print("1"*100)
-            print(channel.id)
-            print(type(channel.id))
             if flag:
                 info = {
                     "channel_id": channel.id,
