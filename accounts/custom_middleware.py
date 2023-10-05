@@ -28,7 +28,7 @@ class ElasticAPILoggerMiddleware:
         log_data['username'] = user.username if user else None
         log_data['response_status'] = response.status_code
 
-        self.es.index(index='test_logs', document=log_data)
+        self.es.index(index='api_logs', document=log_data)
 
         return response
 
