@@ -57,7 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'accounts.custom_middleware.APILoggerMiddleware'
+    'accounts.custom_middleware.ElasticAPILoggerMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -257,7 +257,8 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
-
+ELASTICSEARCH_HOST = os.environ.get("ELASTICSEARCH_HOST")
+ELASTICSEARCH_PORT = os.environ.get("ELASTICSEARCH_PORT")
 
 ELASTICSEARCH_DSL = {
     'default': {
