@@ -1,4 +1,5 @@
 import itertools
+import functools
 
 from celery import shared_task, Task, group, chain
 from django.db import transaction
@@ -25,7 +26,7 @@ def update_all_rss():
     xml_links = XmlLink.objects.all()
     tasks = (update_single_rss.si(xml_link_obj.xml_link) for xml_link_obj in xml_links)
     group_chain_list = chunks(tasks, CHUNK_SIZE)
-    work_flow = chain(*group_chain_list)
+    work_flow = functools.reduce(lambda x, y: x | y, group_chain_list, chain())
     work_flow.apply_async()
 
 
