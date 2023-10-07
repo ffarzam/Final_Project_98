@@ -5,8 +5,10 @@ from .models import Comment
 from feeder.models import Channel
 from feeder.parsers import item_model_mapper
 
+from config.celery import CustomTask
 
-class BaseTaskWithRetry(Task):
+
+class BaseTaskWithRetry(CustomTask):
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True

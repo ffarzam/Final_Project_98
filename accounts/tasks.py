@@ -7,9 +7,10 @@ from django.utils.http import urlsafe_base64_encode
 
 from .models import CustomUser
 from .utils import send_email
+from config.celery import CustomTask
 
 
-class BaseTaskWithRetry(Task):
+class BaseTaskWithRetry(CustomTask):
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True

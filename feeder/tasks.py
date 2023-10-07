@@ -1,7 +1,7 @@
 import itertools
 import functools
 
-from celery import shared_task, Task, group, chain
+from celery import shared_task, group, chain
 from django.db import transaction
 
 from .models import XmlLink, Channel
@@ -9,8 +9,10 @@ from .parsers import channel_parser_mapper, item_model_mapper, items_parser_mapp
 
 from accounts.publisher import publish
 
+from config.celery import CustomTask
 
-class BaseTaskWithRetry(Task):
+
+class BaseTaskWithRetry(CustomTask):
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True
