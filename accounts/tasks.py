@@ -1,6 +1,6 @@
 import logging
 
-from celery import shared_task,
+from celery import shared_task
 
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.urls import reverse
