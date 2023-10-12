@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 import requests
 from xml.etree import ElementTree as ET
-from feeder.models import Episode, News
+from feeder.models import Episode, News, Channel
 
 
 def get_info(xml_link):
@@ -57,6 +57,8 @@ def channel_parser_one(xml_link):
 def item_parser_one(xml_link):
     channel, namespaces = get_info(xml_link)
 
+    channel_obj = Channel.objects.select_related("xml_link").get(xml_link__xml_link=xml_link)
+
     for item in channel.iter("item"):
         title = get_text_or_none(item, "title")
 
@@ -76,27 +78,28 @@ def item_parser_one(xml_link):
 
         explicit = get_text_or_none(item, "itunes:explicit", namespaces=namespaces)
 
-        if audio_file_url is None or title is None or guid is None:
-            continue
+        if audio_file_url and title and guid:
 
-        item_info = {
-            "title": title,
-            "subtitle": subtitle,
-            "published_date": published_date,
-            "description": description,
-            "guid": guid,
-            "audio_file_url": audio_file_url,
-            "duration": duration,
-            "explicit": explicit,
-            "image_file_url": image_file_url,
-        }
+            if channel_obj.last_item_guid == guid:
+                break
 
-        yield item_info
+            item_info = {
+                "title": title,
+                "subtitle": subtitle,
+                "published_date": published_date,
+                "description": description,
+                "guid": guid,
+                "audio_file_url": audio_file_url,
+                "duration": duration,
+                "explicit": explicit,
+                "image_file_url": image_file_url,
+            }
+
+            yield item_info
 
 
 def item_parser_two(xml_link):
     channel, namespaces = get_info(xml_link)
-
     for item in channel.iter("item"):
 
         title = get_text_or_none(item, "title")
@@ -111,19 +114,17 @@ def item_parser_two(xml_link):
 
         image_file_url = get_url_or_none(item, "media:content", lookup="url", namespaces=namespaces)
 
-        if guid is None:
-            continue
+        if guid:
+            item_info = {
+                "title": title,
+                "link": link,
+                "published_date": published_date,
+                "source": source,
+                "guid": guid,
+                "image_file_url": image_file_url,
+            }
 
-        item_info = {
-            "title": title,
-            "link": link,
-            "published_date": published_date,
-            "source": source,
-            "guid": guid,
-            "image_file_url": image_file_url,
-        }
-
-        yield item_info
+            yield item_info
 
 
 def channel_parser_mapper(arg):

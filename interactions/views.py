@@ -74,7 +74,7 @@ class RecommendationView(APIView):
 
     def get(self, request):
         user = request.user
-        max_count = Recommendation.objects.aggregate(max_count=Max("count"))["max_count"]
+        max_count = Recommendation.objects.filter(user=user).aggregate(max_count=Max("count"))["max_count"]
         flatList = []
         if max_count != 0:
             recommendation_query = Recommendation.objects.filter(user=user, count=max_count)
@@ -98,7 +98,7 @@ class CreateCommentView(APIView):
         content = request.data.get("content")
         channel_id = request.data.get("channel_id")
         item_id = request.data.get("item_id")
-        create_comment.delay(content, channel_id, item_id, request.user.id)
+        create_comment.delay(content, channel_id, item_id, request.user.id, request.unique_id)
         return Response({'success': "comment will be submitted"}, status=status.HTTP_200_OK)
 
 

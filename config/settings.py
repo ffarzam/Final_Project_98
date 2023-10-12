@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import time
+
 from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
@@ -25,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.environ.get("DEBUG") == "True" else False
+DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -44,7 +46,10 @@ INSTALLED_APPS = [
     'interactions',
     'pages',
     'drf_spectacular',
-    'minio_storage'
+    'django_celery_beat',
+    'elasticsearch_dsl',
+    'django_elasticsearch_dsl',
+    'django_elasticsearch_dsl_drf',
 
 ]
 
@@ -56,7 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'accounts.custom_middleware.HitCountMiddleware',
+    'accounts.custom_middleware.ElasticAPILoggerMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -116,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
@@ -125,6 +130,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+STATIC_URL = 'static/'
+# STATIC_ROOT = 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -156,12 +163,10 @@ REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
 REDIS_DEFAULT_TTL = 60 * 60 * 24 * 14  # 14 Days
 REDIS_AUTH_TTL = 60 * 60 * 24 * 14  # 14 Day
-REDIS_USERNAME=os.environ.get('REDIS_USERNAME')
-REDIS_PASSWORD=os.environ.get('REDIS_PASSWORD')
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',
         'TIMEOUT': REDIS_DEFAULT_TTL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -170,26 +175,8 @@ CACHES = {
 
     'auth': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/2',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/2',
         'TIMEOUT': REDIS_AUTH_TTL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
-
-    'hit_count': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/3',
-
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-    },
-
-    'celery_broker': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/4',
-
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },
@@ -197,7 +184,7 @@ CACHES = {
 
     'celery_backends': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/5',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
 
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -206,50 +193,48 @@ CACHES = {
 
 }
 
-
 # SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # SESSION_CACHE_ALIAS = "default"
 
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
+RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
 
-CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}/4'
-CELERY_RESULT_BACKEND = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}/5'
-CELERY_TIMEZONE = 'UTC'
+CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}'
+# CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/3'
+CELERY_TIMEZONE = 'Asia/Tehran'
+CELERY_WORKER_CONCURRENCY = 5
+CELERY_PREFETCH_MULTIPLIER = 1
 
-# TODO:
-# CELERY_BEAT_SCHEDULE = {
-#     'notify_customers': {
-#         'task': 'feedr.tasks.update_all_rss',
-#         'schedule': crontab(minute=0, hour=0),
-#
-#     }
-# }
+ELASTICSEARCH_HOST = os.environ.get("ELASTICSEARCH_HOST")
+ELASTICSEARCH_PORT = os.environ.get("ELASTICSEARCH_PORT")
+
+CELERY_BEAT_SCHEDULE = {
+    'update_rss': {
+        'task': 'feeder.tasks.update_all_rss',
+        'schedule': crontab(hour=3, minute=30),
+
+    }
+}
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
 
-    "formatters": {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-    },
+    'handlers': {
+        'elasticsearch_handler': {
+            'level': 'DEBUG',  # Set the desired log level.
+            'class': 'config.elastic_log_handler.ElasticsearchHandler',
+            'host': ELASTICSEARCH_HOST,
+            'port': ELASTICSEARCH_PORT,
 
-    "handlers": {
-
-        "file": {
-            'level': 'INFO',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': 'celery_log.log',
-            'when': 'midnight',
-            'backupCount': 30,
-            'formatter': 'verbose'
         },
     },
     "loggers": {
-        "celery": {
-            "handlers": ["file"],
+        "elastic_logger": {
+            "handlers": ["elasticsearch_handler"],
             "level": "INFO",
             'propagate': False
         },
@@ -257,8 +242,7 @@ LOGGING = {
     },
 }
 
-PASSWORD_RESET_TIMEOUT = 20 * 60  # 20 min
-
+PASSWORD_RESET_TIMEOUT = 5 * 60  # 5 min
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
@@ -268,27 +252,12 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
 
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'elasticsearch:9200'
+    },
+}
 
-STATIC_ROOT = './static_files/'
-
-
-DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
-STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
-MINIO_STORAGE_ENDPOINT = os.environ.get('MINIO_STORAGE_ENDPOINT')
-MINIO_STORAGE_ACCESS_KEY = os.environ.get('MINIO_STORAGE_ACCESS_KEY')
-MINIO_STORAGE_SECRET_KEY = os.environ.get('MINIO_STORAGE_SECRET_KEY')
-# MINIO_STORAGE_ACCESS_KEY = 'KBP6WXGPS387090EZMG8'
-# MINIO_STORAGE_SECRET_KEY = 'DRjFXylyfMqn2zilAr33xORhaYz5r9e8r37XPz3A'
-MINIO_STORAGE_USE_HTTPS = True
-MINIO_STORAGE_MEDIA_OBJECT_METADATA = {"Cache-Control": "max-age=1000"}
-MINIO_STORAGE_MEDIA_BUCKET_NAME = 'local-media'
-MINIO_STORAGE_MEDIA_BACKUP_BUCKET = 'Recycle Bin'
-MINIO_STORAGE_MEDIA_BACKUP_FORMAT = '%c/'
-MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
-MINIO_STORAGE_STATIC_BUCKET_NAME = 'local-static'
-MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
-STATIC_URL = f"{MINIO_STORAGE_ENDPOINT}/{MINIO_STORAGE_STATIC_BUCKET_NAME}/"
-MEDIA_URL = f"{MINIO_STORAGE_ENDPOINT}/{MINIO_STORAGE_MEDIA_BUCKET_NAME}/"
-
-
-CSRF_TRUSTED_ORIGINS = ["https://*.darkube.app"]
+queue_name_list = ["login", "register", "rss_feed_update", "refresh", "logout", "logout_all", "selected_logout"]
+allowed_notification = ["login", "register", "rss_feed_update"]
+auth_allowed_notification = ["login", "register"]

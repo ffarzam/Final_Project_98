@@ -67,7 +67,7 @@ class Episode(ItemsMixin, models.Model):
 class News(ItemsMixin, models.Model):
     title = models.CharField(max_length=500)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
-    link = models.URLField()
+    link = models.URLField(max_length=500)
     source = models.URLField(null=True, blank=True)
     guid = models.CharField(max_length=255, unique=True)
     published_date = models.DateTimeField(null=True, blank=True)

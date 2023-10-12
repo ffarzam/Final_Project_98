@@ -1,7 +1,21 @@
 services:
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    networks:
+      - main
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+      - rabbitmq_log:/var/log/rabbitmq
+    restart: always
+
   postgres:
     container_name: postgres
-    image: postgres:16.0
+    image: postgres:14.0
     environment:
       POSTGRES_USER: ${USER}
       POSTGRES_PASSWORD: ${PASSWORD}
@@ -16,7 +30,6 @@ services:
 
   app:
     build: .
-    # command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     container_name: app
     volumes:
       - .:/code/
@@ -24,8 +37,22 @@ services:
       - main
     depends_on:
       - postgres
+      - redis
     ports:
       - 8000:8000
+    restart: always
+
+  rabbitmq_queue:
+    container_name: rabbitmq_queue
+    build: .
+    command: python manage.py launch_queue_listener
+    volumes:
+      - .:/code/
+    networks:
+      - main
+    depends_on:
+      - rabbitmq
+      - app
     restart: always
 
   redis:
@@ -39,25 +66,45 @@ services:
     volumes:
       - redis_data:/data
 
-#  rabbitmq:
-#    container_name: rabbitmq
-#    image: rabbitmq:3.12.6
-#    networks:
-#      - main
-#    ports:
-#      - 5672:5672
-#    volumes:
-#      - rabbitmq_data:/rabbitmq_data
-#    restart: always
+  elasticsearch:
+    image: elasticsearch:8.10.1
+    container_name: elasticsearch
+    mem_limit: 1g
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.security.enabled: 'false'
+      network.bind_host: 0.0.0.0
+      network.host: 0.0.0.0
+    ports:
+      - 9200:9200
+    networks:
+      - main
+    restart: always
+
+  kibana:
+    image: kibana:8.10.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - main
+    restart: always
+    volumes:
+      - kibana_data:/usr/share/kibana/data
 
   celery:
     container_name: celery
     build: .
     command: celery -A config worker -l INFO
     depends_on:
-      - app
+      - rabbitmq
       - redis
-#      - rabbitmq
+      - app
     environment:
       - C_FORCE_ROOT="true"
     networks:
@@ -69,7 +116,7 @@ services:
   celery_beat:
     container_name: celery_beat
     build: .
-    command: celery -A config beat -l INFO
+    command: celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - celery
     networks:
@@ -79,17 +126,17 @@ services:
       - .:/code/
 
   flower:
-    image: mher/flower:latest
     container_name: flower
+    build: .
     command: celery -A config flower
     networks:
       - main
     ports:
       - 5555:5555
     depends_on:
-      - app
-      - redis
+      - rabbitmq
       - celery
+      - celery_beat
     volumes:
       - flower_data:/flower_data
     restart: always
@@ -101,4 +148,7 @@ volumes:
   postgres_data:
   redis_data:
   flower_data:
-#  rabbitmq_data:
+  rabbitmq_data:
+  rabbitmq_log:
+  elasticsearch_data:
+  kibana_data:
