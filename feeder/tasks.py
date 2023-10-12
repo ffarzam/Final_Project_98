@@ -2,13 +2,13 @@ import itertools
 import functools
 
 from celery import shared_task, group, chain
+
 from django.db import transaction
 
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, item_model_mapper, items_parser_mapper
 
 from accounts.publisher import publish
-
 from config.celery import CustomTask
 
 
@@ -18,8 +18,7 @@ class BaseTaskWithRetry(CustomTask):
     retry_backoff = True
     retry_jitter = False
     task_acks_late = True
-    worker_concurrency = 5
-    worker_prefetch_multiplier = 1
+    task_time_limit = 60
 
 
 @shared_task(task_time_limit=600)
@@ -32,7 +31,7 @@ def update_all_rss():
     work_flow.apply_async()
 
 
-@shared_task(base=BaseTaskWithRetry, task_time_limit=180)
+@shared_task(base=BaseTaskWithRetry)
 def update_single_rss(xml_link):
     xml_link_obj = XmlLink.objects.get(xml_link=xml_link)
     channel_parser = channel_parser_mapper(xml_link_obj.channel_parser)
@@ -60,7 +59,7 @@ def update_single_rss(xml_link):
                 info = {
                     "channel_id": channel.id,
                     "message": f"Channel {channel.title} Has Been Updated",
-                    "routing_key": "rss_feed"
+                    "routing_key": "rss_feed_update"
                 }
                 publish(info)
             return {"Message": f"Channel {channel.title} Has Been Updated"}
