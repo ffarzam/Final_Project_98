@@ -14,8 +14,8 @@ class ElasticsearchHandler(logging.Handler):
         log_entry = {
             'timestamp': time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             'level': record.levelname,
-            'message': json.loads(self.format(record))
         }
+        log_entry.update(json.loads(self.format(record)))
 
         self.es.index(index=self.get_index_name(), document=log_entry)
 
