@@ -3,6 +3,7 @@ import logging
 import os
 
 from celery import Celery, Task
+from celery.worker.request import Request
 
 logger = logging.getLogger('elastic_logger')
 
@@ -19,6 +20,7 @@ class CustomTask(Task):
               eta=None, countdown=None, max_retries=None, **options):
         retry_count = self.request.retries
         log_data = {
+            "unique_id": self.request.args[-1],
             "exe": str(exc),
             'event': f"celery.{self.name}",
             'correlation_id': self.request.correlation_id,
@@ -41,6 +43,7 @@ class CustomTask(Task):
         retry_count = self.request.retries
 
         log_data = {
+            "unique_id": self.request.args[-1],
             'event': f"celery.{self.name}",
             'correlation_id': self.request.correlation_id,
             'args': self.request.args,

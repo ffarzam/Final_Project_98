@@ -5,6 +5,8 @@ from django.http import JsonResponse
 
 from rest_framework import status
 
+from uuid import uuid4
+
 logger = logging.getLogger('elastic_logger')
 
 
@@ -13,6 +15,8 @@ class ElasticAPILoggerMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        unique_id = uuid4().hex
+        setattr(request, "unique_id", unique_id)
         path_blacklist = get_blacklist(request)
         response = self.get_response(request)
         if len(path_blacklist) == 0 and not request.META.get("exception", False):
@@ -52,6 +56,7 @@ def find_user(request):
 
 def api_log_data(request, response, user):
     return {
+        "unique_id": request.unique_id,
         'request_method': request.method,
         'request_path': request.path,
         'request_ip': get_client_ip_address(request) or ' ',
@@ -64,13 +69,14 @@ def api_log_data(request, response, user):
 
 def exception_log_data(request, exception):
     return {
+        "unique_id": request.unique_id,
         'request_method': request.method,
         'request_path': request.path,
         'request_ip': get_client_ip_address(request) or ' ',
         'request_user_agent': request.META.get('HTTP_USER_AGENT', ' '),
         'exception_type': exception.__class__.__name__,
         'exception_message': str(exception),
-        'event': f"exception.{request.resolver_match.app_names[0]}.{request.resolver_match.url_name}",
+        'event': f"api.{request.resolver_match.app_names[0]}.{request.resolver_match.url_name}",
         'exception': True,
     }
 

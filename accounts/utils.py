@@ -1,9 +1,12 @@
 import datetime
+import json
+
 import jwt
 from django.conf import settings
 from uuid import uuid4
 
 from django.core.mail import EmailMessage
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 
 def generate_access_token(user_id, jti):
@@ -63,3 +66,16 @@ def send_email(data):
         to=data["to_email"]
     )
     email.send()
+
+
+def create_periodic_task(instance):
+    schedule, _ = CrontabSchedule.objects.get_or_create(minute=instance.broadcast_on.minute,
+                                                        hour=instance.broadcast_on.hour,
+                                                        day_of_month=instance.broadcast_on.day,
+                                                        month_of_year=instance.broadcast_on.month)
+    task = PeriodicTask.objects.create(crontab=schedule,
+                                       name=f"broadcast notification {instance.id}",
+                                       task="accounts.tasks.broadcast_notification",
+                                       args=json.dumps([instance.id]),
+                                       one_off=True,
+                                       )

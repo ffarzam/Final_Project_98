@@ -1,4 +1,5 @@
 import logging
+from uuid import uuid4
 
 from celery import shared_task
 
@@ -24,8 +25,10 @@ class BaseTaskWithRetry(CustomTask):
     task_time_limit = 60
 
 
-@shared_task(base=BaseTaskWithRetry)
-def send_reset_password_link(current_site, user_id):
+@shared_task(bind=True, base=BaseTaskWithRetry)
+def send_reset_password_link(self, current_site, user_id, unique_id):
+    self.request.args = list(map(str, self.request.args))
+    self.request.args[user_id] = str(user_id)
     uidb64 = urlsafe_base64_encode(force_bytes(user_id))
     user = CustomUser.objects.get(id=user_id)
     token = PasswordResetTokenGenerator().make_token(user)
@@ -36,8 +39,12 @@ def send_reset_password_link(current_site, user_id):
     send_email(email_data)
 
 
-@shared_task(base=BaseTaskWithRetry)
-def broadcast_notification(notification_id):
+@shared_task(bind=True, base=BaseTaskWithRetry)
+def broadcast_notification(self, notification_id, unique_id=None):
+    if unique_id is None:
+        unique_id = uuid4().hex
+        self.request.args.append(unique_id)
+    self.request.args = list(map(str, self.request.args))
     notification = Notification.objects.get(id=notification_id)
     user_notifications = UserNotifications.objects.filter(notification=notification)
     if user_notifications.exists():

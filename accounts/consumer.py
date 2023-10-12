@@ -67,6 +67,7 @@ def callback_mapper(arg):
 
 def create_auth_notification_log_data(user, body):
     return {
+        "unique_id": body["unique_id"],
         'user_id': str(user.id),
         'user_agent': body["user_agent"],
         'event': f"consumer.{body['routing_key']}",
@@ -76,6 +77,7 @@ def create_auth_notification_log_data(user, body):
 
 def create_auth_notification_exception_log_data(user, body, e):
     return {
+        "unique_id": body["unique_id"],
         'user_id': str(user.id),
         'user_agent': body["user_agent"],
         'exception_type': e.__class__.__name__,
@@ -94,7 +96,7 @@ def create_auth_notification(user, body):
         log_data = create_auth_notification_exception_log_data(user, body, e)
         logger.error(json.dumps(log_data))
     else:
-        broadcast_notification.delay(notification.id)
+        broadcast_notification.delay(notification.id, body["unique_id"])
         log_data = create_auth_notification_log_data(user, body)
         logger.info(json.dumps(log_data))
 
@@ -110,13 +112,14 @@ def create_rss_feed_notification(body, qs):
         log_data = create_rss_feed_notification_exception_log_data(body, e)
         logger.error(json.dumps(log_data))
     else:
-        broadcast_notification.delay(notification.id)
+        broadcast_notification.delay(notification.id, body["unique_id"])
         log_data = create_rss_feed_notification_log_data(body)
         logger.info(json.dumps(log_data))
 
 
 def create_rss_feed_notification_log_data(body):
     return {
+        "unique_id": body["unique_id"],
         "channel_id": body["channel_id"],
         'event': f"consumer.{body['routing_key']}",
         "status": "success"
@@ -125,6 +128,7 @@ def create_rss_feed_notification_log_data(body):
 
 def create_rss_feed_notification_exception_log_data(body, e):
     return {
+        "unique_id": body["unique_id"],
         "channel_id": body["channel_id"],
         'exception_type': e.__class__.__name__,
         'exception_message': str(e),

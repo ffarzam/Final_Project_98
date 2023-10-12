@@ -34,6 +34,7 @@ class UserRegister(APIView):
             ser_data.create(ser_data.validated_data)
             username = ser_data.validated_data["username"]
             info = {
+                "unique_id": request.unique_id,
                 "username": username,
                 "message": f"User with {username} successfully registered",
                 "routing_key": "register",
@@ -72,6 +73,7 @@ class UserLogin(APIView):
             "refresh": refresh_token,
         }
         info = {
+            "unique_id": request.unique_id,
             "username": user.username,
             "message": f"New Login Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}",
             "routing_key": "login",
@@ -103,6 +105,7 @@ class RefreshToken(APIView):
         value = cache_value_setter(request)
         caches['auth'].set(key, value)
         info = {
+            "unique_id": request.unique_id,
             "username": user.username,
             "message": f"New Login Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}",
             "routing_key": "refresh",
@@ -129,6 +132,7 @@ class LogoutView(APIView):
             jti = payload["jti"]
             caches['auth'].delete(f'user_{user.id} || {jti}')
             info = {
+                "unique_id": request.unique_id,
                 "username": user.username,
                 "message": f"Logout Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}",
                 "routing_key": "logout",
@@ -169,6 +173,7 @@ class LogoutAll(APIView):
         user = request.user
         caches['auth'].delete_many(caches['auth'].keys(f'user_{user.id} || *'))
         info = {
+            "unique_id": request.unique_id,
             "username": user.username,
             "message": f"Logout-all Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}",
             "routing_key": "logout_all",
@@ -190,6 +195,7 @@ class SelectedLogout(APIView):
         user_agent = caches['auth'].get(f'user_{user.id} || {jti}')
         caches['auth'].delete(f'user_{user.id} || {jti}')
         info = {
+            "unique_id": request.unique_id,
             "username": user.username,
             "message": f"Logout Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')} for session {user_agent}",
             "routing_key": "selected_logout",
@@ -249,7 +255,8 @@ class PasswordResetRequestView(GenericAPIView):
             return Response({'message': "This email doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
         user = user.get()
         current_site = get_current_site(request).domain
-        send_reset_password_link.delay(current_site, user.id)
+        send_reset_password_link.delay(current_site, user.id, request.unique_id)
+        request.user = user
 
         return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
 
