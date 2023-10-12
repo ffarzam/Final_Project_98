@@ -14,12 +14,11 @@ class BaseTaskWithRetry(CustomTask):
     retry_backoff = True
     retry_jitter = False
     task_acks_late = True
-    worker_concurrency = 4
-    worker_prefetch_multiplier = 1
 
 
-@shared_task(base=BaseTaskWithRetry, task_time_limit=120)
-def create_comment(content, channel_id, item_id, user_id):
+@shared_task(bind=True, base=BaseTaskWithRetry, task_time_limit=120)
+def create_comment(self, content, channel_id, item_id, user_id, unique_id):
+    self.request.args = list(map(str, self.request.args))
     channel = Channel.objects.get(id=channel_id)
     ItemClass = item_model_mapper(channel.xml_link.rss_type.name)
     item = ItemClass.objects.get(id=item_id)

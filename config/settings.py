@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import time
+
 from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
@@ -44,6 +46,8 @@ INSTALLED_APPS = [
     'interactions',
     'pages',
     'drf_spectacular',
+    'django_celery_beat',
+    'elasticsearch_dsl',
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
 
@@ -117,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_I18N = True
 
@@ -178,7 +182,6 @@ CACHES = {
         },
     },
 
-
     'celery_backends': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/3',
@@ -202,7 +205,11 @@ CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}'
 # CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/3'
 CELERY_TIMEZONE = 'Asia/Tehran'
+CELERY_WORKER_CONCURRENCY = 5
+CELERY_PREFETCH_MULTIPLIER = 1
 
+ELASTICSEARCH_HOST = os.environ.get("ELASTICSEARCH_HOST")
+ELASTICSEARCH_PORT = os.environ.get("ELASTICSEARCH_PORT")
 
 CELERY_BEAT_SCHEDULE = {
     'update_rss': {
@@ -212,43 +219,30 @@ CELERY_BEAT_SCHEDULE = {
     }
 }
 
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#
-#     "formatters": {
-#         'verbose': {
-#             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-#         },
-#     },
-#
-#     "handlers": {
-#         'console': {
-#             'level': 'INFO',
-#             'class': 'logging.StreamHandler',
-#         },
-#
-#         "file": {
-#             'level': 'INFO',
-#             'class': 'logging.handlers.TimedRotatingFileHandler',
-#             'filename': './log/celery_log.log',
-#             'when': 'midnight',
-#             'backupCount': 30,
-#             'formatter': 'verbose'
-#         },
-#     },
-#     "loggers": {
-#         "celery": {
-#             "handlers": ["file", "console"],
-#             "level": "INFO",
-#             'propagate': False
-#         },
-#
-#     },
-# }
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    'handlers': {
+        'elasticsearch_handler': {
+            'level': 'DEBUG',  # Set the desired log level.
+            'class': 'config.elastic_log_handler.ElasticsearchHandler',
+            'host': ELASTICSEARCH_HOST,
+            'port': ELASTICSEARCH_PORT,
+
+        },
+    },
+    "loggers": {
+        "elastic_logger": {
+            "handlers": ["elasticsearch_handler"],
+            "level": "INFO",
+            'propagate': False
+        },
+
+    },
+}
 
 PASSWORD_RESET_TIMEOUT = 5 * 60  # 5 min
-
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
@@ -257,11 +251,13 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS")
-ELASTICSEARCH_HOST = os.environ.get("ELASTICSEARCH_HOST")
-ELASTICSEARCH_PORT = os.environ.get("ELASTICSEARCH_PORT")
 
 ELASTICSEARCH_DSL = {
     'default': {
         'hosts': 'elasticsearch:9200'
     },
 }
+
+queue_name_list = ["login", "register", "rss_feed_update", "refresh", "logout", "logout_all", "selected_logout"]
+allowed_notification = ["login", "register", "rss_feed_update"]
+auth_allowed_notification = ["login", "register"]

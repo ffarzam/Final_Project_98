@@ -1,39 +1,45 @@
 import itertools
 import functools
+from uuid import uuid4
 
 from celery import shared_task, group, chain
+
 from django.db import transaction
 
 from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, item_model_mapper, items_parser_mapper
 
 from accounts.publisher import publish
-
-from config.celery import CustomTask
+from config.celery import CustomTask, CustomRequest
 
 
 class BaseTaskWithRetry(CustomTask):
+    Request = CustomRequest
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True
     retry_jitter = False
     task_acks_late = True
-    worker_concurrency = 5
-    worker_prefetch_multiplier = 1
+    task_time_limit = 60
 
 
 @shared_task(task_time_limit=600)
-def update_all_rss():
+def update_all_rss(unique_id=None):
+
     CHUNK_SIZE = 5
     xml_links = XmlLink.objects.all()
-    tasks = (update_single_rss.si(xml_link_obj.xml_link) for xml_link_obj in xml_links)
+    tasks = (update_single_rss.si(xml_link_obj.xml_link, unique_id) for xml_link_obj in xml_links)
     group_chain_list = chunks(tasks, CHUNK_SIZE)
     work_flow = functools.reduce(lambda x, y: x | y, group_chain_list, chain())
     work_flow.apply_async()
 
 
-@shared_task(base=BaseTaskWithRetry, task_time_limit=180)
-def update_single_rss(xml_link):
+@shared_task(bind=True, base=BaseTaskWithRetry)
+def update_single_rss(self, xml_link, unique_id=None):
+    if unique_id is None:
+        unique_id = uuid4().hex
+        self.request.args.append(unique_id)
+
     xml_link_obj = XmlLink.objects.get(xml_link=xml_link)
     channel_parser = channel_parser_mapper(xml_link_obj.channel_parser)
     channel_info = channel_parser(xml_link_obj.xml_link)
@@ -58,9 +64,10 @@ def update_single_rss(xml_link):
 
             if flag:
                 info = {
+                    "unique_id": unique_id,
                     "channel_id": channel.id,
                     "message": f"Channel {channel.title} Has Been Updated",
-                    "routing_key": "rss_feed"
+                    "routing_key": "rss_feed_update"
                 }
                 publish(info)
             return {"Message": f"Channel {channel.title} Has Been Updated"}

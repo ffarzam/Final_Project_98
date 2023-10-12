@@ -30,9 +30,9 @@ class UpdateChannelAndItems(APIView):
 
         xml_link = request.data.get('xml_link')
         if xml_link:
-            tasks.update_single_rss.delay(xml_link)
+            tasks.update_single_rss.delay(xml_link, request.unique_id)
         else:
-            tasks.update_all_rss.delay()
+            tasks.update_all_rss.delay(request.unique_id)
 
         return Response({"Update will be done soon"}, status=status.HTTP_200_OK)
 

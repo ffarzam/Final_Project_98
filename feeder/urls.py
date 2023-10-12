@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+app_name = "feeder"
 urlpatterns = [
     path('update/', views.UpdateChannelAndItems.as_view(), name='update'),
     path('channel_list/', views.ChannelList.as_view(), name='channel_list'),

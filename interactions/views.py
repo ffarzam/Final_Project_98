@@ -98,7 +98,7 @@ class CreateCommentView(APIView):
         content = request.data.get("content")
         channel_id = request.data.get("channel_id")
         item_id = request.data.get("item_id")
-        create_comment.delay(content, channel_id, item_id, request.user.id)
+        create_comment.delay(content, channel_id, item_id, request.user.id, request.unique_id)
         return Response({'success': "comment will be submitted"}, status=status.HTTP_200_OK)
 
 

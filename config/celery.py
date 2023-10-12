@@ -1,68 +1,54 @@
+import json
+import logging
 import os
-from datetime import datetime
-import time
 
 from celery import Celery, Task
-from django.conf import settings
-from elasticsearch import Elasticsearch
+from celery.worker.request import Request
 
-# from celery.signals import setup_logging
+logger = logging.getLogger('elastic_logger')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# @setup_logging.connect
-# def config_loggers(*args, **kwargs):
-#     from logging.config import dictConfig
-#     from django.conf import settings
-#     dictConfig(settings.LOGGING)
-
-
 app.autodiscover_tasks()
 
 
 class CustomTask(Task):
-    es = Elasticsearch(f'http://{settings.ELASTICSEARCH_HOST}:{settings.ELASTICSEARCH_PORT}')
 
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        log_data = self.create_log_data(task_id, args, kwargs, state="retry",
-                                        log_type="CRITICAL", exc=exc, einfo=einfo)
-        self.make_log(log_data)
+    def retry(self, args=None, kwargs=None, exc=None, throw=True,
+              eta=None, countdown=None, max_retries=None, **options):
+        retry_count = self.request.retries
+        log_data = {
+            "unique_id": self.request.args[-1],
+            "exe": str(exc),
+            'event': f"celery.{self.name}",
+            'correlation_id': self.request.correlation_id,
+            'args': self.request.args,
+            'kwargs': self.request.kwargs,
+            "attempt_on": retry_count + 1,
+            'status': "retry"
+        }
+        if retry_count != max_retries:
+            logger.error(json.dumps(log_data))
+        else:
+            log_data['status'] = "fail"
+            log_data['exception'] = True
+            del log_data["attempt_on"]
+            logger.critical(json.dumps(log_data))
+
+        super().retry(args, kwargs, exc, throw, eta, countdown, max_retries, **options)
 
     def on_success(self, retval, task_id, args, kwargs):
-        log_data = self.create_log_data(task_id, args, kwargs, state="success",
-                                        log_type="INFO", retval=retval)
-        self.make_log(log_data)
+        retry_count = self.request.retries
 
-    def on_retry(self, exc, task_id, args, kwargs, einfo):
-        log_data = self.create_log_data(task_id, args, kwargs, state="retry",
-                                        log_type="WARNING", exc=exc, einfo=einfo)
-
-        self.make_log(log_data)
-
-    @staticmethod
-    def create_log_data(task_id, args, kwargs, state, log_type,
-                        exc=None, einfo=None, retval=None):
         log_data = {
-            'timestamp': datetime.now(),
-            'exception_type': exc.__class__.__name__,
-            'exception_message': str(exc),
-            "log_type": log_type,
-            "task_id": task_id,
-            "args": args,
-            "kwargs": kwargs,
-            "Exception information": str(einfo),
-            "state": state,
-            "result": retval
+            "unique_id": self.request.args[-1],
+            'event': f"celery.{self.name}",
+            'correlation_id': self.request.correlation_id,
+            'args': self.request.args,
+            'kwargs': self.request.kwargs,
+            "attempt_on": retry_count + 1,
+            'status': "success"
         }
-        return log_data
-
-    def make_log(self, log_data):
-        index_name = self.get_index_name()
-        self.es.index(index=index_name, document=log_data)
-
-    @staticmethod
-    def get_index_name():
-        index_name = f'celery_log-{time.strftime("%Y_%m_%d")}'
-        return index_name
+        logger.info(json.dumps(log_data))

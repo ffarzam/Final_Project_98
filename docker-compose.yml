@@ -116,7 +116,7 @@ services:
   celery_beat:
     container_name: celery_beat
     build: .
-    command: celery -A config beat -l INFO
+    command: celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
     depends_on:
       - celery
     networks:
@@ -125,21 +125,21 @@ services:
     volumes:
       - .:/code/
 
-#  flower:
-#    container_name: flower
-#    build: .
-#    command: celery -A config flower
-#    networks:
-#      - main
-#    ports:
-#      - 5555:5555
-#    depends_on:
-#      - rabbitmq
-#      - celery
-#      - celery_beat
-#    volumes:
-#      - flower_data:/flower_data
-#    restart: always
+  flower:
+    container_name: flower
+    build: .
+    command: celery -A config flower
+    networks:
+      - main
+    ports:
+      - 5555:5555
+    depends_on:
+      - rabbitmq
+      - celery
+      - celery_beat
+    volumes:
+      - flower_data:/flower_data
+    restart: always
 
 networks:
   main:
