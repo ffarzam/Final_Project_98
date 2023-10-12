@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-
+app_name = "accounts"
 urlpatterns = [
     path('login/', views.UserLogin.as_view(), name='login'),
     path('login/refresh/', views.RefreshToken.as_view(), name='token_refresh'),
@@ -16,5 +16,3 @@ urlpatterns = [
     path('password_reset_request/', views.PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password_reset/<str:uidb64>/<str:token>/', views.SetNewPasswordView.as_view(), name='password_reset'),
 ]
-
-
