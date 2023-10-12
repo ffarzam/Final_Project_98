@@ -1,48 +1,36 @@
-from datetime import datetime
+import json
+import logging
 
-from elasticsearch import Elasticsearch
+from django.http import JsonResponse
 
-from .models import CustomUser
-from .utils import decode_jwt
-from django.conf import settings
+from rest_framework import status
+
+logger = logging.getLogger('elastic_logger')
 
 
 class ElasticAPILoggerMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        self.es = Elasticsearch(f'http://{settings.ELASTICSEARCH_HOST}:{settings.ELASTICSEARCH_PORT}')
 
     def __call__(self, request):
-        log_data = {
-            'timestamp': datetime.now(),
-            'request_method': request.method,
-            'request_path': request.path,
-            'request_ip': get_client_ip_address(request),
-            'request_user_agent': request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
-        }
-
+        path_blacklist = get_blacklist(request)
         response = self.get_response(request)
-        user = find_user(request, response)
-
-        log_data['user_id'] = user.id if user else None
-        log_data['username'] = user.username if user else None
-        log_data['response_status'] = response.status_code
-
-        self.es.index(index='api_logs', document=log_data)
+        if len(path_blacklist) == 0 and not request.META.get("exception", False):
+            user = find_user(request)
+            log_data = api_log_data(request, response, user)
+            logger.info(json.dumps(log_data))
 
         return response
 
     def process_exception(self, request, exception):
-        log_data = {
-            'timestamp': datetime.now(),
-            'request_method': request.method,
-            'request_path': request.path,
-            'request_ip': get_client_ip_address(request),
-            'request_user_agent': request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
-            'exception_type': exception.__class__.__name__,
-            'exception_message': exception.message if hasattr(exception, "message") else str(exception),
-        }
-        self.es.index(index='exception_logs', document=log_data)
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        path_blacklist = get_blacklist(request)
+        if len(path_blacklist) == 0:
+            log_data = exception_log_data(request, exception)
+            log_data['response_status'] = status.HTTP_500_INTERNAL_SERVER_ERROR
+            logger.error(json.dumps(log_data))
+            request.META["exception"] = True
+        return JsonResponse({"error": str(exception)}, status=status_code)
 
 
 def get_client_ip_address(request):
@@ -55,14 +43,39 @@ def get_client_ip_address(request):
     return ip_addr
 
 
-def find_user(request, response):
+def find_user(request):
     user = None
     if request.user.is_authenticated:
         user = request.user
-    elif refresh_token := response.data.get("refresh"):
-        payload = decode_jwt(refresh_token)
-        user = CustomUser.objects.get(id=payload.get("user_id"))
-    elif username := response.data.get("username"):
-        user = CustomUser.objects.get(username=username)
-
     return user
+
+
+def api_log_data(request, response, user):
+    return {
+        'request_method': request.method,
+        'request_path': request.path,
+        'request_ip': get_client_ip_address(request) or ' ',
+        'request_user_agent': request.META.get('HTTP_USER_AGENT', ' '),
+        'user_id': str(user.id) if user else " ",
+        'response_status': response.status_code,
+        'event': f"api.{request.resolver_match.app_names[0]}.{request.resolver_match.url_name}"
+    }
+
+
+def exception_log_data(request, exception):
+    return {
+        'request_method': request.method,
+        'request_path': request.path,
+        'request_ip': get_client_ip_address(request) or ' ',
+        'request_user_agent': request.META.get('HTTP_USER_AGENT', ' '),
+        'exception_type': exception.__class__.__name__,
+        'exception_message': str(exception),
+        'event': f"exception.{request.resolver_match.app_names[0]}.{request.resolver_match.url_name}",
+        'exception': True,
+    }
+
+
+def get_blacklist(request):
+    lst = ['admin', "status", "schema", "favicon"]
+    path_blacklist = list(filter(lambda x: request.path.startswith(f"/{x}"), lst))
+    return path_blacklist
