@@ -10,11 +10,10 @@ from .models import XmlLink, Channel
 from .parsers import channel_parser_mapper, item_model_mapper, items_parser_mapper
 
 from accounts.publisher import publish
-from config.celery import CustomTask, CustomRequest
+from config.celery import CustomTask
 
 
 class BaseTaskWithRetry(CustomTask):
-    Request = CustomRequest
     autoretry_for = (Exception,)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True
