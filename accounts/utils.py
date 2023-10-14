@@ -5,7 +5,7 @@ import jwt
 from django.conf import settings
 from uuid import uuid4
 
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mail
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 
@@ -60,12 +60,16 @@ def cache_value_setter(request):
 
 
 def send_email(data):
+    content = data.get("content_subtype")
     email = EmailMessage(
         subject=data['email_subject'],
         body=data["email_body"],
         to=data["to_email"]
     )
-    email.send()
+
+    if content == "html":
+        email.content_subtype = content
+    email.send(fail_silently=False)
 
 
 def create_periodic_task(instance):

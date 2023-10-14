@@ -138,7 +138,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
 
         password = data['password']
         token = self.context.get('kwargs').get("token")
-        uidb64 = self.context.get('kwargs').get("uibd64")
+        uidb64 = self.context.get('kwargs').get("uidb64")
         if token is None or uidb64 is None:
             raise serializers.ValidationError("Missing Data")
 
@@ -157,3 +157,21 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Token is not valid, please request again")
 
         return super().validate(data)
+
+
+class AccountVerificationSerializer(serializers.Serializer):
+    def validate(self, data):
+
+        token = self.context.get('kwargs').get("token")
+        uidb64 = self.context.get('kwargs').get("uidb64")
+        if token is None or uidb64 is None:
+            raise serializers.ValidationError("Missing Data")
+        try:
+            user_id = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(id=user_id)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            raise serializers.ValidationError("Token is not valid, please request again")
+
+        return user

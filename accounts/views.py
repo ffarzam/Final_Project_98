@@ -13,9 +13,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .custom_middleware import get_client_ip_address
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
-    UpdateUserSerializer, PasswordResetSerializer, SetNewPasswordSerializer
+    UpdateUserSerializer, PasswordResetSerializer, SetNewPasswordSerializer, AccountVerificationSerializer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
-from .tasks import send_reset_password_link
+from .tasks import send_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
     cache_key_parser
 from .publisher import publish
@@ -33,6 +33,15 @@ class UserRegister(APIView):
         if ser_data.is_valid():
             ser_data.create(ser_data.validated_data)
             username = ser_data.validated_data["username"]
+            app_name = request.resolver_match.app_name
+            url_name = request.resolver_match.url_name
+            unique_id = request.unique_id
+            user = CustomUser.objects.get(username=username)
+            request.user = user
+            current_site = get_current_site(request).domain
+
+            send_link.delay(current_site, user.id, app_name, url_name, unique_id)
+
             info = {
                 "unique_id": request.unique_id,
                 "username": username,
@@ -42,10 +51,21 @@ class UserRegister(APIView):
                 "ip": get_client_ip_address(request) or " "
             }
             publish(info)
-            user = CustomUser.objects.get(username=username)
-            request.user = user
+
             return Response(ser_data.data, status=status.HTTP_201_CREATED)
         return Response(ser_data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyAccount(APIView):
+    serializer_class = AccountVerificationSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={"kwargs": kwargs})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        user.is_active = True
+        user.save()
+        return Response({"success": "Your account has been activated successfully"}, status=status.HTTP_200_OK)
 
 
 class UserLogin(APIView):
@@ -255,7 +275,12 @@ class PasswordResetRequestView(GenericAPIView):
             return Response({'message': "This email doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
         user = user.get()
         current_site = get_current_site(request).domain
-        send_reset_password_link.delay(current_site, user.id, request.unique_id)
+
+        app_name = request.resolver_match.app_name
+        url_name = request.resolver_match.url_name
+        unique_id = request.unique_id
+
+        send_link.delay(current_site, user.id, app_name, url_name, unique_id)
         request.user = user
 
         return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
@@ -268,7 +293,7 @@ class SetNewPasswordView(GenericAPIView):
         serializer = self.serializer_class(data=request.data, context={"kwargs": kwargs})
         serializer.is_valid(raise_exception=True)
 
-        uidb64 = kwargs["uibd64"]
+        uidb64 = kwargs["uidb64"]
 
         user_id = force_str(urlsafe_base64_decode(uidb64))
         user = CustomUser.objects.get(id=user_id)
