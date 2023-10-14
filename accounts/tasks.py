@@ -28,7 +28,6 @@ class BaseTaskWithRetry(CustomTask):
 @shared_task(bind=True, base=BaseTaskWithRetry)
 def send_reset_password_link(self, current_site, user_id, unique_id):
     self.request.args = list(map(str, self.request.args))
-    self.request.args[user_id] = str(user_id)
     uidb64 = urlsafe_base64_encode(force_bytes(user_id))
     user = CustomUser.objects.get(id=user_id)
     token = PasswordResetTokenGenerator().make_token(user)
