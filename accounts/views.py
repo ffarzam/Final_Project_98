@@ -1,6 +1,4 @@
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import ValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import authenticate
@@ -56,6 +54,18 @@ class UserRegister(APIView):
 
             return Response(ser_data.data, status=status.HTTP_201_CREATED)
         return Response(ser_data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyAccount(APIView):
+    serializer_class = AccountVerificationSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={"kwargs": kwargs})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        user.is_active = True
+        user.save()
+        return Response({"success": "Your account has been activated successfully"}, status=status.HTTP_200_OK)
 
 
 class UserLogin(APIView):
