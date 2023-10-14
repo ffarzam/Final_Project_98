@@ -6,6 +6,7 @@ urlpatterns = [
     path('login/', views.UserLogin.as_view(), name='login'),
     path('login/refresh/', views.RefreshToken.as_view(), name='token_refresh'),
     path('register/', views.UserRegister.as_view(), name='register'),
+    path('verify_account/<str:uidb64>/<str:token>/', views.VerifyAccount.as_view(), name='verify_account'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('logout_all/', views.LogoutAll.as_view(), name='logout_all'),
     path('active_login/', views.CheckAllActiveLogin.as_view(), name='active_login'),
