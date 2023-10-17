@@ -1,0 +1,248 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-16 17:20+0330\n"
+"PO-Revision-Date: 2023-10-15 21:19+0330\n"
+"Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Translated-Using: django-rosetta 0.9.9\n"
+
+#: accounts/custom_exception.py:8
+msgid "Access Token Has Been Expired"
+msgstr ""
+
+#: accounts/custom_exception.py:14
+msgid "Refresh Token Has Been Expired, Please Login Again"
+msgstr ""
+
+#: accounts/custom_exception.py:20
+msgid "Invalid Token, Please Login Again"
+msgstr ""
+
+#: accounts/custom_exception.py:26
+msgid "User Is Not Active"
+msgstr ""
+
+#: accounts/custom_exception.py:32
+msgid "User Not Found"
+msgstr ""
+
+#: accounts/custom_exception.py:38
+msgid "Authorization Header Is Not Set In Request Header"
+msgstr ""
+
+#: accounts/custom_exception.py:44
+msgid "Access Token Not Found In Authorization Header"
+msgstr ""
+
+#: accounts/custom_exception.py:50
+msgid "Token Prefix Not Found In Authorization Header"
+msgstr ""
+
+#: accounts/custom_exception.py:56
+msgid "An error occurred"
+msgstr ""
+
+#: accounts/models.py:15
+msgid "Username"
+msgstr ""
+
+#: accounts/models.py:16
+msgid "Email"
+msgstr ""
+
+#: accounts/models.py:30
+msgid "User"
+msgstr ""
+
+#: accounts/models.py:31
+msgid "Users"
+msgstr ""
+
+#: accounts/models.py:45
+msgid "Notification"
+msgstr ""
+
+#: accounts/models.py:46
+msgid "Notifications"
+msgstr ""
+
+#: accounts/models.py:81
+msgid "User Notification"
+msgstr ""
+
+#: accounts/models.py:82
+msgid "User Notifications"
+msgstr ""
+
+#: accounts/models.py:96
+msgid "User Last Activity"
+msgstr ""
+
+#: accounts/models.py:97
+msgid "Users Last Activity"
+msgstr ""
+
+#: accounts/views.py:56
+msgid "Registered successfully, activation link was sent to your email"
+msgstr ""
+
+#: accounts/views.py:71
+msgid "Your account has been activated successfully"
+msgstr "اکانت شما با موفقیت فعال گردید"
+
+#: accounts/views.py:85
+msgid "Invalid Credentials"
+msgstr ""
+
+#: accounts/views.py:109
+msgid "Logged in successfully"
+msgstr ""
+
+#: accounts/views.py:208
+msgid "All accounts logged out"
+msgstr ""
+
+#: accounts/views.py:230
+msgid "Chosen account was successfully logged out"
+msgstr ""
+
+#: accounts/views.py:255
+msgid "Password has been successfully updated"
+msgstr ""
+
+#: accounts/views.py:278
+msgid "This email doesn't exist"
+msgstr ""
+
+#: accounts/views.py:289
+msgid "A link Was Sent To You To Reset Your Password"
+msgstr ""
+
+#: accounts/views.py:306
+msgid "Password Reset Done"
+msgstr ""
+
+#: config/settings.py:34
+msgid "Persian"
+msgstr ""
+
+#: config/settings.py:35
+msgid "English"
+msgstr ""
+
+#: feeder/models.py:13
+msgid "Category"
+msgstr ""
+
+#: feeder/models.py:14
+msgid "Categories"
+msgstr ""
+
+#: feeder/models.py:24
+msgid "Type"
+msgstr ""
+
+#: feeder/models.py:25
+msgid "Types"
+msgstr ""
+
+#: feeder/models.py:39
+msgid "Xml Link"
+msgstr ""
+
+#: feeder/models.py:40
+msgid "Xml Links"
+msgstr ""
+
+#: feeder/models.py:65
+msgid "Channel"
+msgstr ""
+
+#: feeder/models.py:66
+msgid "Channels"
+msgstr ""
+
+#: feeder/models.py:85
+msgid "Podcast Episode"
+msgstr ""
+
+#: feeder/models.py:86
+msgid "Podcasts Episodes"
+msgstr ""
+
+#: feeder/models.py:99 feeder/models.py:100
+msgid "News"
+msgstr ""
+
+#: feeder/models.py:108
+msgid "Search Count"
+msgstr ""
+
+#: feeder/models.py:109
+msgid "Search Counts"
+msgstr ""
+
+#: feeder/views.py:38
+msgid "Update will be done soon"
+msgstr ""
+
+#: interactions/models.py:16
+msgid "Like"
+msgstr ""
+
+#: interactions/models.py:17
+msgid "Likes"
+msgstr ""
+
+#: interactions/models.py:33
+msgid "Comment"
+msgstr ""
+
+#: interactions/models.py:34
+msgid "Comments"
+msgstr ""
+
+#: interactions/models.py:46
+msgid "Subscription"
+msgstr ""
+
+#: interactions/models.py:47
+msgid "Subscriptions"
+msgstr ""
+
+#: interactions/models.py:60 interactions/models.py:61
+msgid "Bookmark"
+msgstr ""
+
+#: interactions/models.py:74
+msgid "Recommendation"
+msgstr ""
+
+#: interactions/models.py:75
+msgid "Recommendations"
+msgstr ""
+
+#: interactions/models.py:87
+msgid "Episode Trace"
+msgstr ""
+
+#: interactions/models.py:88
+msgid "Episodes Trace"
+msgstr ""
+
+#: interactions/models.py:99 interactions/models.py:100
+msgid "Read News"
+msgstr ""
