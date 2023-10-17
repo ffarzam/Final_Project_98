@@ -17,14 +17,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(verbose_name=_("Joined Date"), auto_now_add=True, editable=False)
-    last_modify = models.DateTimeField(verbose_name=_("Last Modify"), auto_now=True, editable=False)
+    date_joined = models.DateTimeField(auto_now_add=True, editable=False)
+    last_modify = models.DateTimeField(auto_now=True, editable=False)
 
     USERNAME_FIELD = 'username'
 
     REQUIRED_FIELDS = ["email"]
 
     objects = CustomManager()
+
+    class Meta:
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
 
     def __str__(self):
         return self.username
@@ -36,6 +40,10 @@ class Notification(models.Model):
     is_sent = models.BooleanField(default=False, editable=False)
     action = models.CharField(null=True, blank=True)
     broadcast_on = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Notification')
+        verbose_name_plural = _('Notifications')
 
     def __str__(self):
         return f"{self.notification}"
@@ -69,6 +77,10 @@ class UserNotifications(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     notification = models.ForeignKey(Notification, on_delete=models.PROTECT)
 
+    class Meta:
+        verbose_name = _('User Notification')
+        verbose_name_plural = _('User Notifications')
+
     def __str__(self):
         return f"{self.user} has notification: {self.notification}"
 
@@ -79,3 +91,10 @@ class UserLastActivity(models.Model):
     action = models.CharField(max_length=50)
     user_agent = models.TextField(null=True, blank=True)
     ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('User Last Activity')
+        verbose_name_plural = _('Users Last Activity')
+
+    def __str__(self):
+        return f"{self.user} last activity"
