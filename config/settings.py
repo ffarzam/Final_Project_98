@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
-import time
+from django.utils.translation import gettext_lazy as _
 
 from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
+from django.middleware.locale import LocaleMiddleware
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,6 +29,16 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+LANGUAGES = [
+    ("fa", _("Persian")),
+    ("en", _("English")),
+]
+
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale'
+]
 
 ALLOWED_HOSTS = []
 
@@ -50,12 +61,17 @@ INSTALLED_APPS = [
     'elasticsearch_dsl',
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
+    'rosetta'
 
 ]
 
 MIDDLEWARE = [
+    # 'accounts.custom_middleware.ElasticAPILoggerMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware',
+    'accounts.custom_middleware.CustomLocaleMiddleware',
+    # 'accounts.custom_middleware.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -77,6 +93,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -119,7 +136,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'Asia/Tehran'
 

@@ -3,6 +3,7 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import authenticate
 from django.core.cache import caches
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.generics import UpdateAPIView, GenericAPIView
 from rest_framework.views import APIView
@@ -10,14 +11,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from .custom_middleware import get_client_ip_address
 from .models import CustomUser
 from .serializers import UserRegisterSerializer, UserLoginSerializer, ProfileSerializer, ChangePasswordSerializer, \
     UpdateUserSerializer, PasswordResetSerializer, SetNewPasswordSerializer, AccountVerificationSerializer
 from .authentication import AccessTokenAuthentication, RefreshTokenAuthentication
 from .tasks import send_link
 from .utils import generate_refresh_token, generate_access_token, jti_maker, cache_key_setter, cache_value_setter, \
-    cache_key_parser
+    cache_key_parser, get_client_ip_address
 from .publisher import publish
 
 
@@ -52,7 +52,9 @@ class UserRegister(APIView):
             }
             publish(info)
 
-            return Response(ser_data.data, status=status.HTTP_201_CREATED)
+            return Response({'message': _("Registered successfully, activation link was sent to your email"),
+                             "data": ser_data.data},
+                            status=status.HTTP_201_CREATED)
         return Response(ser_data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -65,7 +67,7 @@ class VerifyAccount(APIView):
         user = serializer.validated_data
         user.is_active = True
         user.save()
-        return Response({"success": "Your account has been activated successfully"}, status=status.HTTP_200_OK)
+        return Response({"success": _("Your account has been activated successfully")}, status=status.HTTP_200_OK)
 
 
 class UserLogin(APIView):
@@ -79,7 +81,7 @@ class UserLogin(APIView):
         password = serializer.validated_data.get('password')
         user = authenticate(request, user_identifier=user_identifier, password=password)
         if user is None:
-            return Response({'message': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _('Invalid Credentials')}, status=status.HTTP_400_BAD_REQUEST)
 
         jti = jti_maker()
         access_token = generate_access_token(user.id, jti)
@@ -103,7 +105,7 @@ class UserLogin(APIView):
         }
         publish(info)
         request.user = user
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response({"message": _("Logged in successfully"), "data": data}, status=status.HTTP_201_CREATED)
 
 
 class RefreshToken(APIView):
@@ -202,7 +204,7 @@ class LogoutAll(APIView):
         }
         publish(info)
 
-        return Response({"message": "All accounts logged out"}, status=status.HTTP_200_OK)
+        return Response({"message": _("All accounts logged out")}, status=status.HTTP_200_OK)
 
 
 class SelectedLogout(APIView):
@@ -224,7 +226,7 @@ class SelectedLogout(APIView):
         }
         publish(info)
 
-        return Response({"message": True}, status=status.HTTP_200_OK)
+        return Response({"message": _("Chosen account was successfully logged out")}, status=status.HTTP_200_OK)
 
 
 class ShowProfile(APIView):
@@ -249,7 +251,7 @@ class ChangePasswordView(UpdateAPIView):
         serializer = self.serializer_class(instance, data=request.data, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response({"message": "Password has been successfully updated"})
+        return Response({"message": _("Password has been successfully updated")})
 
 
 class UpdateProfileView(UpdateAPIView):
@@ -272,7 +274,7 @@ class PasswordResetRequestView(GenericAPIView):
 
         user = CustomUser.objects.filter(email=email)
         if not user.exists():
-            return Response({'message': "This email doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': _("This email doesn't exist")}, status=status.HTTP_400_BAD_REQUEST)
         user = user.get()
         current_site = get_current_site(request).domain
 
@@ -283,7 +285,7 @@ class PasswordResetRequestView(GenericAPIView):
         send_link.delay(current_site, user.id, app_name, url_name, unique_id)
         request.user = user
 
-        return Response({"message": "A link Was Sent To You To Reset Your Password"}, status=status.HTTP_200_OK)
+        return Response({"message": _("A link Was Sent To You To Reset Your Password")}, status=status.HTTP_200_OK)
 
 
 class SetNewPasswordView(GenericAPIView):
@@ -300,4 +302,4 @@ class SetNewPasswordView(GenericAPIView):
         password = serializer.validated_data['password']
         user.set_password(password)
         user.save()
-        return Response({"success": "Password Reset Done"}, status=status.HTTP_200_OK)
+        return Response({"success": _("Password Reset Done")}, status=status.HTTP_200_OK)

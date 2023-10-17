@@ -14,7 +14,10 @@ RUN pip install -r requirements.txt
 COPY . /code/
 
 EXPOSE 8000
+RUN apt update && apt install gettext -y
 
-CMD python3 manage.py makemigrations --noinput && \
-    python3 manage.py migrate --noinput && \
+CMD python manage.py makemessages --all && \
+    python manage.py compilemessages && \
+    python manage.py makemigrations --noinput && \
+    python manage.py migrate --noinput && \
     python manage.py runserver 0.0.0.0:8000

@@ -1,0 +1,248 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-16 17:20+0330\n"
+"PO-Revision-Date: 2023-10-16 18:36+0330\n"
+"Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Translated-Using: django-rosetta 0.9.9\n"
+
+#: accounts/custom_exception.py:8
+msgid "Access Token Has Been Expired"
+msgstr "توکن دسترسی شما منقضی شد"
+
+#: accounts/custom_exception.py:14
+msgid "Refresh Token Has Been Expired, Please Login Again"
+msgstr "توکن تازه سازی منقضی شده است، لطفا دوباره وارد اکانت خود شوید"
+
+#: accounts/custom_exception.py:20
+msgid "Invalid Token, Please Login Again"
+msgstr "توکن نامعتبر، دوباره وارد اکانت خود شوید"
+
+#: accounts/custom_exception.py:26
+msgid "User Is Not Active"
+msgstr "اکانت شما فعال نیست"
+
+#: accounts/custom_exception.py:32
+msgid "User Not Found"
+msgstr "کاربر پیدا نشد"
+
+#: accounts/custom_exception.py:38
+msgid "Authorization Header Is Not Set In Request Header"
+msgstr "سربرگ مجوز در سربرگ درخواست تنظیم نشده است"
+
+#: accounts/custom_exception.py:44
+msgid "Access Token Not Found In Authorization Header"
+msgstr "توکن دسترسی در سربرگ مجوز پیدا نشد"
+
+#: accounts/custom_exception.py:50
+msgid "Token Prefix Not Found In Authorization Header"
+msgstr "پیشوند توکن دسترسی در سربرگ مجوز پیدا نشد"
+
+#: accounts/custom_exception.py:56
+msgid "An error occurred"
+msgstr "خطایی پیش آمده!!!"
+
+#: accounts/models.py:15
+msgid "Username"
+msgstr "نام کاربری"
+
+#: accounts/models.py:16
+msgid "Email"
+msgstr "ایمیل"
+
+#: accounts/models.py:30
+msgid "User"
+msgstr "کاربر"
+
+#: accounts/models.py:31
+msgid "Users"
+msgstr "کاربر ها"
+
+#: accounts/models.py:45
+msgid "Notification"
+msgstr "پیام"
+
+#: accounts/models.py:46
+msgid "Notifications"
+msgstr "پیام ها"
+
+#: accounts/models.py:81
+msgid "User Notification"
+msgstr "پیام های کار"
+
+#: accounts/models.py:82
+msgid "User Notifications"
+msgstr "پیام های کاربر"
+
+#: accounts/models.py:96
+msgid "User Last Activity"
+msgstr "اخرین فعالیت کاربر"
+
+#: accounts/models.py:97
+msgid "Users Last Activity"
+msgstr "اخرین فعالیت کاربر ها "
+
+#: accounts/views.py:56
+msgid "Registered successfully, activation link was sent to your email"
+msgstr "ثبت نام با موفقیت انجام شد، لینک فعال سازی به ایمیل شما ارسال شد"
+
+#: accounts/views.py:71
+msgid "Your account has been activated successfully"
+msgstr "اکانت شما با موفقیت فعال شد"
+
+#: accounts/views.py:85
+msgid "Invalid Credentials"
+msgstr "هویت نامعتبر"
+
+#: accounts/views.py:109
+msgid "Logged in successfully"
+msgstr "با موفقیت وارد اکانت خود شدید"
+
+#: accounts/views.py:208
+msgid "All accounts logged out"
+msgstr "از تمامی اکانت ها خارج شدید"
+
+#: accounts/views.py:230
+msgid "Chosen account was successfully logged out"
+msgstr "از اکانت مورد نظر با موفقیت خارج شدید"
+
+#: accounts/views.py:255
+msgid "Password has been successfully updated"
+msgstr "به روز رسانی رمز عبور شما با موفقیت انجام شد"
+
+#: accounts/views.py:278
+msgid "This email doesn't exist"
+msgstr "ایمیل شما وجود ندارد"
+
+#: accounts/views.py:289
+msgid "A link Was Sent To You To Reset Your Password"
+msgstr "لینک فعالسازی اکانت برای شما ارسال شد"
+
+#: accounts/views.py:306
+msgid "Password Reset Done"
+msgstr "گذرواژه بازنشانی شد"
+
+#: config/settings.py:34
+msgid "Persian"
+msgstr "فارسی"
+
+#: config/settings.py:35
+msgid "English"
+msgstr "انگلیسی"
+
+#: feeder/models.py:13
+msgid "Category"
+msgstr "دسته بندی"
+
+#: feeder/models.py:14
+msgid "Categories"
+msgstr "دسته بندی ها "
+
+#: feeder/models.py:24
+msgid "Type"
+msgstr "نوع "
+
+#: feeder/models.py:25
+msgid "Types"
+msgstr "انواع"
+
+#: feeder/models.py:39
+msgid "Xml Link"
+msgstr "لینک xml"
+
+#: feeder/models.py:40
+msgid "Xml Links"
+msgstr "لینک های xml"
+
+#: feeder/models.py:65
+msgid "Channel"
+msgstr "کانال "
+
+#: feeder/models.py:66
+msgid "Channels"
+msgstr "کانال ها"
+
+#: feeder/models.py:85
+msgid "Podcast Episode"
+msgstr "قسمت پادکست"
+
+#: feeder/models.py:86
+msgid "Podcasts Episodes"
+msgstr "قسمت های پادکست ها"
+
+#: feeder/models.py:99 feeder/models.py:100
+msgid "News"
+msgstr "خبر ها"
+
+#: feeder/models.py:108
+msgid "Search Count"
+msgstr "تعداد جستجو"
+
+#: feeder/models.py:109
+msgid "Search Counts"
+msgstr "تعداد جستجو ها"
+
+#: feeder/views.py:38
+msgid "Update will be done soon"
+msgstr "به روز رسانی به زودی انجام خواهد گرفت"
+
+#: interactions/models.py:16
+msgid "Like"
+msgstr "لایک"
+
+#: interactions/models.py:17
+msgid "Likes"
+msgstr "لایک ها "
+
+#: interactions/models.py:33
+msgid "Comment"
+msgstr "یادداشت"
+
+#: interactions/models.py:34
+msgid "Comments"
+msgstr "یادداشت ها"
+
+#: interactions/models.py:46
+msgid "Subscription"
+msgstr "اشتراک"
+
+#: interactions/models.py:47
+msgid "Subscriptions"
+msgstr "اشتراک ها"
+
+#: interactions/models.py:60 interactions/models.py:61
+msgid "Bookmark"
+msgstr "نشانه گذاری"
+
+#: interactions/models.py:74
+msgid "Recommendation"
+msgstr "پیشنهاد"
+
+#: interactions/models.py:75
+msgid "Recommendations"
+msgstr "پیشنهاد ها"
+
+#: interactions/models.py:87
+msgid "Episode Trace"
+msgstr "دیابی پادکست"
+
+#: interactions/models.py:88
+msgid "Episodes Trace"
+msgstr "ردیابی پادکست ها"
+
+#: interactions/models.py:99 interactions/models.py:100
+msgid "Read News"
+msgstr "خبر های خوانده شده"
