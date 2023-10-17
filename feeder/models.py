@@ -2,10 +2,16 @@ from django.db import models
 
 from .mixins import ItemsMixin
 
+from django.utils.translation import gettext_lazy as _
+
 
 # Create your models here.
 class Category(models.Model):
     name = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name = _('Category')
+        verbose_name_plural = _('Categories')
 
     def __str__(self):
         return f"{self.name}"
@@ -13,6 +19,10 @@ class Category(models.Model):
 
 class Type(models.Model):
     name = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name = _('Type')
+        verbose_name_plural = _('Types')
 
     def __str__(self):
         return f"{self.name}"
@@ -24,6 +34,10 @@ class XmlLink(models.Model):
     items_parser = models.CharField(max_length=50)
     rss_type = models.ForeignKey(Type, on_delete=models.PROTECT, null=True, blank=True)
     categories = models.ManyToManyField(Category, blank=True)
+
+    class Meta:
+        verbose_name = _('Xml Link')
+        verbose_name_plural = _('Xml Links')
 
     def __str__(self):
         return f'{self.xml_link}'
@@ -47,6 +61,10 @@ class Channel(models.Model):
     #         GinIndex(fields=['name']),
     #     ]
 
+    class Meta:
+        verbose_name = _('Channel')
+        verbose_name_plural = _('Channels')
+
     def __str__(self):
         return f'{self.title}'
 
@@ -63,6 +81,10 @@ class Episode(ItemsMixin, models.Model):
     duration = models.CharField(max_length=25, null=True, blank=True)
     explicit = models.CharField(max_length=10, null=True, blank=True)
 
+    class Meta:
+        verbose_name = _('Podcast Episode')
+        verbose_name_plural = _('Podcasts Episodes')
+
 
 class News(ItemsMixin, models.Model):
     title = models.CharField(max_length=500)
@@ -73,10 +95,18 @@ class News(ItemsMixin, models.Model):
     published_date = models.DateTimeField(null=True, blank=True)
     image_file_url = models.URLField(max_length=500, null=True, blank=True)
 
+    class Meta:
+        verbose_name = _('News')
+        verbose_name_plural = _('News')
+
 
 class SearchCount(models.Model):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     count = models.PositiveBigIntegerField(default=0)
+
+    class Meta:
+        verbose_name = _('Search Count')
+        verbose_name_plural = _('Search Counts')
 
     def __str__(self):
         return f"{self.channel}"
