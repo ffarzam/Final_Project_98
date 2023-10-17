@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.db.models import Q, F
+from django.utils.translation import gettext_lazy as _
 
 from .models import Channel, Episode, News
 from .parsers import item_model_mapper
@@ -34,7 +35,7 @@ class UpdateChannelAndItems(APIView):
         else:
             tasks.update_all_rss.delay(request.unique_id)
 
-        return Response({"Update will be done soon"}, status=status.HTTP_200_OK)
+        return Response({_("Update will be done soon")}, status=status.HTTP_200_OK)
 
 
 class ChannelList(ListAPIView):
