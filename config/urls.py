@@ -19,8 +19,12 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.conf.urls.static import static
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns, set_language
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('i18n/', set_language, name='set_language'),
     path('accounts/', include("accounts.urls")),
     path('', include("pages.urls")),
     path('', include("feeder.urls")),
@@ -30,6 +34,8 @@ urlpatterns = [
     path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
-
+urlpatterns += i18n_patterns(
+    path('rosetta/', include("rosetta.urls")),
+)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
