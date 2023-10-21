@@ -33,13 +33,15 @@ services:
     container_name: app
     volumes:
       - .:/code/
+      - static_volume:/code/staticfiles
+
     networks:
       - main
     depends_on:
       - postgres
       - redis
-    ports:
-      - 8000:8000
+    expose:
+      - 8000
     restart: always
 
   rabbitmq_queue:
@@ -141,6 +143,19 @@ services:
       - flower_data:/flower_data
     restart: always
 
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    ports:
+      - 80:80
+    volumes:
+      - static_volume:/code/staticfiles
+    depends_on:
+      - app
+    networks:
+      - main
+    restart: always
+
 networks:
   main:
 
@@ -152,3 +167,5 @@ volumes:
   rabbitmq_log:
   elasticsearch_data:
   kibana_data:
+  static_volume:
+
