@@ -15,7 +15,6 @@ from django.utils.translation import gettext_lazy as _
 from celery.schedules import crontab
 from pathlib import Path
 from dotenv import load_dotenv
-from django.middleware.locale import LocaleMiddleware
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,19 +27,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 LANGUAGES = [
     ("fa", _("Persian")),
     ("en", _("English")),
 ]
 
-
 LOCALE_PATHS = [
     BASE_DIR / 'locale'
 ]
-
-ALLOWED_HOSTS = []
+# CSRF_TRUSTED_ORIGINS = ["*"]
+ALLOWED_HOSTS = ["localhost"]
 
 # Application definition
 
@@ -66,18 +64,15 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # 'accounts.custom_middleware.ElasticAPILoggerMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.middleware.locale.LocaleMiddleware',
-    'accounts.custom_middleware.CustomLocaleMiddleware',
-    # 'accounts.custom_middleware.LocaleMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'accounts.custom_middleware.ElasticAPILoggerMiddleware'
+    'config.custom_middleware.ElasticAPILoggerMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -148,7 +143,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-# STATIC_ROOT = 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -162,10 +157,15 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+PASSWORD_RESET_TIMEOUT = 300  # 5 minutes
+
 REST_FRAMEWORK = {
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'accounts.authentication.CustomJWTAuthentication',
-    # ),
+    'DEFAULT_THROTTLE_RATES': {
+        'reset_password': '1/300seconds',
+        'set_password': '1/min',
+        'verify_account': '1/300seconds',
+
+    },
 
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -210,16 +210,12 @@ CACHES = {
 
 }
 
-# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-# SESSION_CACHE_ALIAS = "default"
-
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
 RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
 
 CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}'
-# CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/3'
 CELERY_TIMEZONE = 'Asia/Tehran'
 CELERY_WORKER_CONCURRENCY = 5
@@ -242,11 +238,10 @@ LOGGING = {
 
     'handlers': {
         'elasticsearch_handler': {
-            'level': 'DEBUG',  # Set the desired log level.
+            'level': 'INFO',
             'class': 'config.elastic_log_handler.ElasticsearchHandler',
             'host': ELASTICSEARCH_HOST,
             'port': ELASTICSEARCH_PORT,
-
         },
     },
     "loggers": {
@@ -258,8 +253,6 @@ LOGGING = {
 
     },
 }
-
-PASSWORD_RESET_TIMEOUT = 5 * 60  # 5 min
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
@@ -275,6 +268,7 @@ ELASTICSEARCH_DSL = {
     },
 }
 
-queue_name_list = ["login", "register", "rss_feed_update", "refresh", "logout", "logout_all", "selected_logout"]
+queue_name_list = ["login", "register", "activate", "rss_feed_update", "refresh", "logout", "logout_all",
+                   "selected_logout"]
 allowed_notification = ["login", "register", "rss_feed_update"]
 auth_allowed_notification = ["login", "register"]
