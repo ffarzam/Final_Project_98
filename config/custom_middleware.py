@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from rest_framework import status
 
-from Final_Project_98.accounts.utils import get_client_ip_address
+from accounts.utils import get_client_ip_address
 
 logger = logging.getLogger('elastic_logger')
 
