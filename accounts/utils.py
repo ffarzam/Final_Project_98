@@ -8,6 +8,8 @@ from uuid import uuid4
 from django.core.mail import EmailMessage, send_mail
 from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
+from .publisher import publish
+
 
 def generate_access_token(user_id, jti):
     access_token_payload = {
@@ -94,3 +96,25 @@ def get_client_ip_address(request):
         ip_addr = req_headers.get('REMOTE_ADDR')
     return ip_addr
 
+
+def publisher(request, user, message, routing_key):
+    info = {
+        "unique_id": request.unique_id,
+        "username": user.username,
+        "message": message,
+        "routing_key": routing_key,
+        "user_agent": request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
+        "ip": get_client_ip_address(request) or " "
+    }
+    publish(info)
+
+
+def set_token(request, user, caches):
+    jti = jti_maker()
+    access_token = generate_access_token(user.id, jti)
+    refresh_token = generate_refresh_token(user.id, jti)
+
+    key = cache_key_setter(user.id, jti)
+    value = cache_value_setter(request)
+    caches['auth'].set(key, value)
+    return access_token, refresh_token
