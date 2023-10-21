@@ -46,7 +46,8 @@ def rss_feed_callback(ch, method, property, body):
 
     channel_id = body["channel_id"]
     content_type_obj = ContentType.objects.get(model="channel")
-    qs = Bookmark.objects.filter(content_type=content_type_obj, object_id=channel_id)
+    # qs = Bookmark.objects.filter(content_type=content_type_obj, object_id=channel_id)
+    qs = Bookmark.objects.select_related("customuser").filter(content_type=content_type_obj, object_id=channel_id)
     if qs.exists():
         create_rss_feed_notification(body, qs)
     ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -105,9 +106,8 @@ def create_rss_feed_notification(body, qs):
     try:
         with transaction.atomic():
             notification = Notification.objects.create(notification=body["message"], action=body["routing_key"])
-            for item in qs:
-                user = CustomUser.objects.get(id=item.user.id)
-                UserNotifications.objects.create(user=user, notification=notification)
+            items = (UserNotifications(user=item.user, notification=notification) for item in qs)
+            UserNotifications.objects.bulk_create(items)
     except Exception as e:
         log_data = create_rss_feed_notification_exception_log_data(body, e)
         logger.error(json.dumps(log_data))
