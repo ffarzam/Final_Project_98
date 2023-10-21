@@ -123,7 +123,7 @@ class PasswordResetSerializer(serializers.Serializer):
         user = CustomUser.objects.filter(email=email)
         if not user.exists():
             raise serializers.ValidationError("This email doesn't exist")
-        return super().validate(data)
+        return user.get()
 
 
 class SetNewPasswordSerializer(serializers.Serializer):
@@ -152,11 +152,13 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError("Password and your email can't be same")
         if password == user.username:
             raise serializers.ValidationError("Password and your username can't be same")
+        if data['password'] != data['password2']:
+            raise serializers.ValidationError("Passwords don't match")
 
         if not PasswordResetTokenGenerator().check_token(user, token):
             raise serializers.ValidationError("Token is not valid, please request again")
 
-        return super().validate(data)
+        return user, password
 
 
 class AccountVerificationSerializer(serializers.Serializer):
@@ -175,3 +177,7 @@ class AccountVerificationSerializer(serializers.Serializer):
             raise serializers.ValidationError("Token is not valid, please request again")
 
         return user
+
+
+class VerifyAccountResetSerializer(PasswordResetSerializer):
+    pass
