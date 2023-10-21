@@ -86,7 +86,7 @@ class ElasticAPILoggerMiddleware:
 
     @staticmethod
     def get_blacklist(request):
-        lst = ['admin', "status", "schema", "favicon", "rosetta", "i18n"]
+        lst = ['admin', "status", "schema", "favicon.ico", "rosetta", "i18n"]
         path_blacklist = list(filter(lambda x: re.match(rf"(/..|)/({x})(/.*|)$", request.path), lst))
         return path_blacklist
 
