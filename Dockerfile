@@ -13,11 +13,12 @@ RUN pip install -r requirements.txt
 
 COPY . /code/
 
-EXPOSE 8000
 RUN apt update && apt install gettext -y
 
 CMD python manage.py makemessages --all && \
     python manage.py compilemessages && \
+    python manage.py collectstatic --no-input && \
     python manage.py makemigrations --noinput && \
     python manage.py migrate --noinput && \
-    python manage.py runserver 0.0.0.0:8000
+    gunicorn -b 0.0.0.0:8000 config.wsgi:application
+
