@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-16 17:20+0330\n"
-"PO-Revision-Date: 2023-10-15 21:19+0330\n"
+"POT-Creation-Date: 2023-10-21 22:18+0330\n"
+"PO-Revision-Date: 2023-10-20 21:20+0330\n"
 "Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
@@ -18,42 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Translated-Using: django-rosetta 0.9.9\n"
-
-#: accounts/custom_exception.py:8
-msgid "Access Token Has Been Expired"
-msgstr ""
-
-#: accounts/custom_exception.py:14
-msgid "Refresh Token Has Been Expired, Please Login Again"
-msgstr ""
-
-#: accounts/custom_exception.py:20
-msgid "Invalid Token, Please Login Again"
-msgstr ""
-
-#: accounts/custom_exception.py:26
-msgid "User Is Not Active"
-msgstr ""
-
-#: accounts/custom_exception.py:32
-msgid "User Not Found"
-msgstr ""
-
-#: accounts/custom_exception.py:38
-msgid "Authorization Header Is Not Set In Request Header"
-msgstr ""
-
-#: accounts/custom_exception.py:44
-msgid "Access Token Not Found In Authorization Header"
-msgstr ""
-
-#: accounts/custom_exception.py:50
-msgid "Token Prefix Not Found In Authorization Header"
-msgstr ""
-
-#: accounts/custom_exception.py:56
-msgid "An error occurred"
-msgstr ""
 
 #: accounts/models.py:15
 msgid "Username"
@@ -95,51 +59,99 @@ msgstr ""
 msgid "Users Last Activity"
 msgstr ""
 
-#: accounts/views.py:56
+#: accounts/views.py:46
 msgid "Registered successfully, activation link was sent to your email"
 msgstr ""
 
-#: accounts/views.py:71
-msgid "Your account has been activated successfully"
-msgstr "اکانت شما با موفقیت فعال گردید"
+#: accounts/views.py:61 accounts/views.py:79
+msgid "Your account has already activated"
+msgstr ""
 
-#: accounts/views.py:85
+#: accounts/views.py:66
+msgid "A link Was Sent To You To Activate Your Account"
+msgstr ""
+
+#: accounts/views.py:88
+msgid "Your account has been activated successfully"
+msgstr ""
+
+#: accounts/views.py:102
 msgid "Invalid Credentials"
 msgstr ""
 
-#: accounts/views.py:109
+#: accounts/views.py:104
+msgid "User hasn't activated his/her account yet"
+msgstr ""
+
+#: accounts/views.py:116
 msgid "Logged in successfully"
 msgstr ""
 
-#: accounts/views.py:208
+#: accounts/views.py:153
+msgid "Logged out successfully"
+msgstr ""
+
+#: accounts/views.py:187
 msgid "All accounts logged out"
 msgstr ""
 
-#: accounts/views.py:230
+#: accounts/views.py:204
 msgid "Chosen account was successfully logged out"
 msgstr ""
 
-#: accounts/views.py:255
+#: accounts/views.py:229
 msgid "Password has been successfully updated"
 msgstr ""
 
-#: accounts/views.py:278
-msgid "This email doesn't exist"
-msgstr ""
-
-#: accounts/views.py:289
+#: accounts/views.py:256
 msgid "A link Was Sent To You To Reset Your Password"
 msgstr ""
 
-#: accounts/views.py:306
+#: accounts/views.py:271
 msgid "Password Reset Done"
 msgstr ""
 
-#: config/settings.py:34
+#: config/custom_exception.py:8
+msgid "Access Token Has Been Expired"
+msgstr ""
+
+#: config/custom_exception.py:14
+msgid "Refresh Token Has Been Expired, Please Login Again"
+msgstr ""
+
+#: config/custom_exception.py:20
+msgid "Invalid Token, Please Login Again"
+msgstr ""
+
+#: config/custom_exception.py:26
+msgid "User Is Not Active"
+msgstr ""
+
+#: config/custom_exception.py:32
+msgid "User Not Found"
+msgstr ""
+
+#: config/custom_exception.py:38
+msgid "Authorization Header Is Not Set In Request Header"
+msgstr ""
+
+#: config/custom_exception.py:44
+msgid "Access Token Not Found In Authorization Header"
+msgstr ""
+
+#: config/custom_exception.py:50
+msgid "Token Prefix Not Found In Authorization Header"
+msgstr ""
+
+#: config/custom_exception.py:56
+msgid "An error occurred"
+msgstr ""
+
+#: config/settings.py:33
 msgid "Persian"
 msgstr ""
 
-#: config/settings.py:35
+#: config/settings.py:34
 msgid "English"
 msgstr ""
 
