@@ -42,16 +42,6 @@ class UserRegister(APIView):
 
             send_link.delay(current_site, user.id, app_name, url_name, unique_id)
 
-            info = {
-                "unique_id": request.unique_id,
-                "username": username,
-                "message": f"User with {username} successfully registered",
-                "routing_key": "register",
-                "user_agent": request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
-                "ip": get_client_ip_address(request) or " "
-            }
-            publish(info)
-
             return Response({'message': _("Registered successfully, activation link was sent to your email"),
                              "data": ser_data.data},
                             status=status.HTTP_201_CREATED)
@@ -67,6 +57,16 @@ class VerifyAccount(APIView):
         user = serializer.validated_data
         user.is_active = True
         user.save()
+
+        info = {
+            "unique_id": request.unique_id,
+            "username": user.username,
+            "message": f"User with {user.username} successfully registered",
+            "routing_key": "register",
+            "user_agent": request.META.get('HTTP_USER_AGENT', 'UNKNOWN'),
+            "ip": get_client_ip_address(request) or " "
+        }
+        publish(info)
         return Response({"success": _("Your account has been activated successfully")}, status=status.HTTP_200_OK)
 
 
