@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'elasticsearch_dsl',
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
-    'rosetta'
+    'rosetta',
+    'minio_storage'
 
 ]
 
@@ -141,9 +142,14 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+MEDIA_URL = "/media/"
+# STATIC_URL = 'static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+STATIC_ROOT = './staticfiles/'
+# STATICFILES_DIRS = [
+#     BASE_DIR / "staticfiles",
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -272,3 +278,25 @@ queue_name_list = ["login", "register", "activate", "rss_feed_update", "refresh"
                    "selected_logout"]
 allowed_notification = ["login", "register", "rss_feed_update"]
 auth_allowed_notification = ["login", "register"]
+
+DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
+STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
+MINIO_STORAGE_ENDPOINT = 'minio:9000'
+MINIO_EXTERNAL_STORAGE_ENDPOINT = "http://127.0.0.1:9000"
+
+MINIO_STORAGE_ACCESS_KEY = os.environ.get("MINIO_ROOT_USER")
+MINIO_STORAGE_SECRET_KEY = os.environ.get("MINIO_ROOT_PASSWORD")
+MINIO_STORAGE_USE_HTTPS = False
+
+MINIO_STORAGE_MEDIA_OBJECT_METADATA = {"Cache-Control": "max-age=1000"}
+MINIO_STORAGE_MEDIA_BACKUP_BUCKET = 'Recycle Bin'
+MINIO_STORAGE_MEDIA_BACKUP_FORMAT = '%c/'
+
+MINIO_STORAGE_MEDIA_BUCKET_NAME = 'local-media'
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
+
+MINIO_STORAGE_STATIC_BUCKET_NAME = 'local-static'
+MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
+
+MINIO_STORAGE_STATIC_URL = f'{MINIO_EXTERNAL_STORAGE_ENDPOINT}/{MINIO_STORAGE_STATIC_BUCKET_NAME}'
+MINIO_STORAGE_MEDIA_URL = f'{MINIO_EXTERNAL_STORAGE_ENDPOINT}/{MINIO_STORAGE_MEDIA_BUCKET_NAME}'
