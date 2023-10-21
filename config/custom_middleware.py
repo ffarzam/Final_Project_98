@@ -4,17 +4,9 @@ import re
 import traceback
 from uuid import uuid4
 
-from django.middleware.locale import LocaleMiddleware
-from django.utils.translation.trans_real import get_language_from_path, check_for_language, get_languages, \
-    get_supported_language_variant, parse_accept_lang_header, language_code_re
-from django.conf import settings
-from django.conf.urls.i18n import is_language_prefix_patterns_used
-from django.http import HttpResponseRedirect
-from django.utils import translation
-
 from rest_framework import status
 
-from .utils import get_client_ip_address
+from Final_Project_98.accounts.utils import get_client_ip_address
 
 logger = logging.getLogger('elastic_logger')
 
@@ -89,67 +81,3 @@ class ElasticAPILoggerMiddleware:
         lst = ['admin', "status", "schema", "favicon.ico", "rosetta", "i18n"]
         path_blacklist = list(filter(lambda x: re.match(rf"(/..|)/({x})(/.*|)$", request.path), lst))
         return path_blacklist
-
-
-class CustomLocaleMiddleware(LocaleMiddleware):
-    response_redirect_class = HttpResponseRedirect
-
-    def process_request(self, request):
-        urlconf = getattr(request, "urlconf", settings.ROOT_URLCONF)
-        (
-            i18n_patterns_used,
-            prefixed_default_language,
-        ) = is_language_prefix_patterns_used(urlconf)
-        language = self.get_language_from_request(
-            request, check_path=i18n_patterns_used
-        )
-        language_from_path = translation.get_language_from_path(request.path_info)
-        if (
-                not language_from_path
-                and i18n_patterns_used
-                and not prefixed_default_language
-                and not language
-        ):
-            language = settings.LANGUAGE_CODE
-        translation.activate(language)
-        request.LANGUAGE_CODE = translation.get_language()
-
-    @staticmethod
-    def get_language_from_request(request, check_path=False):
-
-        if check_path:
-            lang_code = get_language_from_path(request.path_info)
-            if lang_code is not None:
-                return lang_code
-
-        lang_code = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
-
-        if (
-                lang_code is not None
-                and lang_code in get_languages()
-                and check_for_language(lang_code)
-        ):
-            return lang_code
-
-        try:
-            return get_supported_language_variant(lang_code)
-        except LookupError:
-            pass
-
-        accept = request.headers.get("Accept-Language", "")
-        for accept_lang, unused in parse_accept_lang_header(accept):
-            if accept_lang == "*":
-                break
-
-            if not language_code_re.search(accept_lang):
-                continue
-
-            try:
-                return get_supported_language_variant(accept_lang)
-            except LookupError:
-                continue
-        try:
-            return get_supported_language_variant(settings.LANGUAGE_CODE)
-        except LookupError:
-
-            return settings.LANGUAGE_CODE
