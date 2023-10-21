@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import jwt
 from django.contrib.auth.backends import ModelBackend
 from rest_framework.authentication import BaseAuthentication
-from . import custom_exception
+from config import custom_exception
 from .models import CustomUser
 from .utils import decode_jwt
 from django.core.cache import caches
