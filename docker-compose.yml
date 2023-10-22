@@ -33,8 +33,6 @@ services:
     container_name: app
     volumes:
       - .:/code/
-      - static_volume:/code/staticfiles
-
     networks:
       - main
     depends_on:
@@ -148,10 +146,27 @@ services:
     build: ./nginx
     ports:
       - 80:80
-    volumes:
-      - static_volume:/code/staticfiles
     depends_on:
       - app
+    networks:
+      - main
+    restart: always
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    expose:
+      - 9000
+      - 9001
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - ./minio/data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server --console-address ":9001" /data
     networks:
       - main
     restart: always
@@ -167,5 +182,5 @@ volumes:
   rabbitmq_log:
   elasticsearch_data:
   kibana_data:
-  static_volume:
+
 
