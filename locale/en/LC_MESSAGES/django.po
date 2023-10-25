@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-25 21:05+0330\n"
+"POT-Creation-Date: 2023-10-25 22:34+0330\n"
 "PO-Revision-Date: 2023-10-20 21:20+0330\n"
 "Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -324,11 +324,6 @@ msgid ""
 "If you did not request to change your password, please ignore this email."
 msgstr ""
 
-#: templates/email_templates/accounts/password_reset.html:24
-#: templates/email_templates/accounts/verify_account.html:24
-msgid "Thank you for choosing our service."
-msgstr ""
-
 #: templates/email_templates/accounts/verify_account.html:19
 msgid "Account Verification"
 msgstr ""
@@ -346,4 +341,8 @@ msgstr ""
 #: templates/email_templates/accounts/verify_account.html:23
 msgid ""
 "If you did not create an account on our website, please ignore this email."
+msgstr ""
+
+#: templates/email_templates/accounts/verify_account.html:24
+msgid "Thank you for choosing our service."
 msgstr ""
