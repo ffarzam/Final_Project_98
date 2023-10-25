@@ -8,5 +8,5 @@ class Command(BaseCommand):
     help = 'Launches Consumer for login message : RabbitMQ'
 
     def handle(self, *args, **options):
-        for item in settings.queue_name_list:
+        for item in settings.QUEUE_NAME_LIST:
             threading.Thread(target=start_consumers, args=[item]).start()
