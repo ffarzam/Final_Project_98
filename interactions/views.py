@@ -75,15 +75,12 @@ class RecommendationView(APIView):
     def get(self, request):
         user = request.user
         max_count = Recommendation.objects.filter(user=user).aggregate(max_count=Max("count"))["max_count"]
-        flatList = []
+        flatList = set()
         if max_count != 0:
             recommendation_query = Recommendation.objects.filter(user=user, count=max_count)
-            lst = []
-            for item in recommendation_query:
-                channel = Channel.objects.filter(xml_link__categories=item.category)
-                lst.append(list(channel))
-
-            flatList = set(sum(lst, []))
+            unique_category_ids = recommendation_query.values_list('category', flat=True).distinct()
+            channels = Channel.objects.filter(xml_link__categories__in=unique_category_ids)
+            flatList.update(channels)
 
         ser_data = ChannelSerializer(flatList, many=True, context={"request": request})
 
@@ -135,9 +132,9 @@ class UserEpisodeLikeList(ListAPIView):
     def get_queryset(self):
         object_id_tuple_list = Like.objects.filter(user=self.request.user,
                                                    content_type=ContentType.objects.get(model="episode")).values_list(
-            "object_id")
-        id_list = list(map(lambda x: x[0], object_id_tuple_list))
-        return Episode.objects.filter(id__in=id_list)
+            "object_id", flat=True)
+
+        return Episode.objects.filter(id__in=object_id_tuple_list)
 
 
 class UserNewsLikeList(ListAPIView):
@@ -149,9 +146,9 @@ class UserNewsLikeList(ListAPIView):
     def get_queryset(self):
         object_id_tuple_list = Like.objects.filter(user=self.request.user,
                                                    content_type=ContentType.objects.get(model="news")).values_list(
-            "object_id")
-        id_list = list(map(lambda x: x[0], object_id_tuple_list))
-        return News.objects.filter(id__in=id_list)
+            "object_id", flat=True)
+        # id_list = list(map(lambda x: x[0], object_id_tuple_list))
+        return News.objects.filter(id__in=object_id_tuple_list)
 
 
 class BookmarkChannel(APIView):
@@ -183,10 +180,8 @@ class UserBookmarkChannelList(ListAPIView):
 
     def get_queryset(self):
         object_id_tuple_list = Bookmark.objects.filter(user=self.request.user, content_type=ContentType.objects.get(
-            model="channel")).values_list("object_id")
-
-        id_list = list(map(lambda x: x[0], object_id_tuple_list))
-        return Channel.objects.filter(id__in=id_list)
+            model="channel")).values_list("object_id", flat=True)
+        return Channel.objects.filter(id__in=object_id_tuple_list)
 
 
 class BookmarkItem(APIView):
@@ -221,9 +216,8 @@ class UserBookmarkEpisodeList(ListAPIView):
 
     def get_queryset(self):
         object_id_tuple_list = Bookmark.objects.filter(user=self.request.user, content_type=ContentType.objects.get(
-            model="episode")).values_list("object_id")
-        id_list = list(map(lambda x: x[0], object_id_tuple_list))
-        return Episode.objects.filter(id__in=id_list)
+            model="episode")).values_list("object_id", flat=True)
+        return Episode.objects.filter(id__in=object_id_tuple_list)
 
 
 class UserBookmarkNewsList(ListAPIView):
@@ -235,6 +229,5 @@ class UserBookmarkNewsList(ListAPIView):
     def get_queryset(self):
         object_id_tuple_list = Bookmark.objects.filter(user=self.request.user,
                                                        content_type=ContentType.objects.get(model="news")).values_list(
-            "object_id")
-        id_list = list(map(lambda x: x[0], object_id_tuple_list))
-        return News.objects.filter(id__in=id_list)
+            "object_id", flat=True)
+        return News.objects.filter(id__in=object_id_tuple_list)
