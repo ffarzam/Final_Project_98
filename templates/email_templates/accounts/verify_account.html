@@ -1,5 +1,6 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,12 +16,12 @@
         <tr>
             <td></td>
             <td width="600" style="background-color: #ffffff; padding: 20px; border-radius: 4px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-                <h2 style="color: #333;">Account Verification</h2>
-                <p>Hello {{ user.username }},</p>
-                <p>Thank you for registering on our website. To complete your registration, please click the button below to verify your account:</p>
-                <p><a href="{{ absolute_link }}" style="background-color: #007bff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; display: inline-block;">Verify Your Account</a></p>
-                <p>If you did not create an account on our website, please ignore this email.</p>
-                <p>Thank you for choosing our service.</p>
+                <h2 {% if rtl %}dir="rtl"{% endif %} style="color: #333;">{% translate "Account Verification" %}</h2>
+                <p {% if rtl %}dir="rtl"{% endif %}>{% translate "Hello" %} {{ user.username }},</p>
+                <p {% if rtl %}dir="rtl"{% endif %}>{% translate "Thank you for registering on our website. To complete your registration, please click the button below to verify your account:" %}</p>
+                <p {% if rtl %}dir="rtl"{% endif %}><a href="{{ absolute_link }}" style="background-color: #007bff; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 4px; display: inline-block;">{% translate "Verify Your Account" %}</a></p>
+                <p {% if rtl %}dir="rtl"{% endif %}>{% translate "If you did not create an account on our website, please ignore this email." %}</p>
+                <p {% if rtl %}dir="rtl"{% endif %}>{% translate "Thank you for choosing our service." %}</p>
             </td>
             <td></td>
         </tr>
