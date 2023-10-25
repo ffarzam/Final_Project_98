@@ -37,19 +37,6 @@ class Comment(models.Model):
         return f"{self.user} Commented on {self.content_object}"
 
 
-class Subscription(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscriptions')
-    channel = models.ForeignKey("feeder.Channel", on_delete=models.CASCADE, related_name='subscriptions')
-    subscribe_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = _('Subscription')
-        verbose_name_plural = _('Subscriptions')
-
-    def __str__(self):
-        return f"{self.user} Commented on {self.channel}"
-
-
 class Bookmark(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
