@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-21 22:18+0330\n"
+"POT-Creation-Date: 2023-10-25 21:05+0330\n"
 "PO-Revision-Date: 2023-10-20 21:20+0330\n"
 "Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,96 +19,147 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Translated-Using: django-rosetta 0.9.9\n"
 
-#: accounts/models.py:15
+#: accounts/models.py:12
 msgid "Username"
 msgstr ""
 
-#: accounts/models.py:16
+#: accounts/models.py:13
 msgid "Email"
 msgstr ""
 
-#: accounts/models.py:30
+#: accounts/models.py:28
 msgid "User"
 msgstr ""
 
-#: accounts/models.py:31
+#: accounts/models.py:29
 msgid "Users"
 msgstr ""
 
-#: accounts/models.py:45
+#: accounts/models.py:43
 msgid "Notification"
 msgstr ""
 
-#: accounts/models.py:46
+#: accounts/models.py:44
 msgid "Notifications"
 msgstr ""
 
-#: accounts/models.py:81
+#: accounts/models.py:79
 msgid "User Notification"
 msgstr ""
 
-#: accounts/models.py:82
+#: accounts/models.py:80
 msgid "User Notifications"
 msgstr ""
 
-#: accounts/models.py:96
+#: accounts/models.py:94
 msgid "User Last Activity"
 msgstr ""
 
-#: accounts/models.py:97
+#: accounts/models.py:95
 msgid "Users Last Activity"
 msgstr ""
 
-#: accounts/views.py:46
+#: accounts/serializers.py:27 accounts/serializers.py:107
+msgid "Username must be more than 6 characters long"
+msgstr ""
+
+#: accounts/serializers.py:33 accounts/serializers.py:68
+#: accounts/serializers.py:158
+msgid "Passwords don't match"
+msgstr ""
+
+#: accounts/serializers.py:35 accounts/serializers.py:98
+msgid "Email and username can't be same"
+msgstr ""
+
+#: accounts/serializers.py:37 accounts/serializers.py:72
+#: accounts/serializers.py:100 accounts/serializers.py:156
+msgid "Password and username can't be same"
+msgstr ""
+
+#: accounts/serializers.py:39 accounts/serializers.py:70
+#: accounts/serializers.py:102 accounts/serializers.py:154
+msgid "Password and email can't be same"
+msgstr ""
+
+#: accounts/serializers.py:79
+msgid "Old password is not correct"
+msgstr ""
+
+#: accounts/serializers.py:127
+msgid "This email doesn't exist"
+msgstr ""
+
+#: accounts/serializers.py:161 accounts/serializers.py:179
+msgid "Token is not valid, please request again"
+msgstr ""
+
+#: accounts/views.py:47
 msgid "Registered successfully, activation link was sent to your email"
 msgstr ""
 
-#: accounts/views.py:61 accounts/views.py:79
+#: accounts/views.py:62 accounts/views.py:80
 msgid "Your account has already activated"
 msgstr ""
 
-#: accounts/views.py:66
+#: accounts/views.py:67
 msgid "A link Was Sent To You To Activate Your Account"
 msgstr ""
 
-#: accounts/views.py:88
+#: accounts/views.py:89
 msgid "Your account has been activated successfully"
 msgstr ""
 
-#: accounts/views.py:102
-msgid "Invalid Credentials"
+#: accounts/views.py:103
+msgid "Invalid Username or Password"
 msgstr ""
 
-#: accounts/views.py:104
+#: accounts/views.py:105
+msgid "User is Banned"
+msgstr ""
+
+#: accounts/views.py:107
 msgid "User hasn't activated his/her account yet"
 msgstr ""
 
-#: accounts/views.py:116
+#: accounts/views.py:118
 msgid "Logged in successfully"
 msgstr ""
 
-#: accounts/views.py:153
+#: accounts/views.py:155
 msgid "Logged out successfully"
 msgstr ""
 
-#: accounts/views.py:187
+#: accounts/views.py:189
 msgid "All accounts logged out"
 msgstr ""
 
-#: accounts/views.py:204
+#: accounts/views.py:206
 msgid "Chosen account was successfully logged out"
 msgstr ""
 
-#: accounts/views.py:229
+#: accounts/views.py:232
 msgid "Password has been successfully updated"
 msgstr ""
 
-#: accounts/views.py:256
+#: accounts/views.py:257
 msgid "A link Was Sent To You To Reset Your Password"
 msgstr ""
 
-#: accounts/views.py:271
+#: accounts/views.py:272
 msgid "Password Reset Done"
+msgstr ""
+
+#: accounts/views.py:292
+msgid "All accounts logged out and disabled"
+msgstr ""
+
+#: accounts/views.py:294 accounts/views.py:314
+msgid "No user with this specification was found"
+msgstr ""
+
+#: accounts/views.py:312
+msgid "User account is enabled"
 msgstr ""
 
 #: config/custom_exception.py:8
@@ -227,34 +278,72 @@ msgstr ""
 msgid "Comments"
 msgstr ""
 
-#: interactions/models.py:46
-msgid "Subscription"
-msgstr ""
-
-#: interactions/models.py:47
-msgid "Subscriptions"
-msgstr ""
-
-#: interactions/models.py:60 interactions/models.py:61
+#: interactions/models.py:47 interactions/models.py:48
 msgid "Bookmark"
 msgstr ""
 
-#: interactions/models.py:74
+#: interactions/models.py:61
 msgid "Recommendation"
 msgstr ""
 
-#: interactions/models.py:75
+#: interactions/models.py:62
 msgid "Recommendations"
 msgstr ""
 
-#: interactions/models.py:87
+#: interactions/models.py:74
 msgid "Episode Trace"
 msgstr ""
 
-#: interactions/models.py:88
+#: interactions/models.py:75
 msgid "Episodes Trace"
 msgstr ""
 
-#: interactions/models.py:99 interactions/models.py:100
+#: interactions/models.py:86 interactions/models.py:87
 msgid "Read News"
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:19
+msgid "Reset Password"
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:20
+#: templates/email_templates/accounts/verify_account.html:20
+msgid "Hello"
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:21
+msgid "Please click the button below to reset your password:"
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:22
+msgid "Reset Your Password"
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:23
+msgid ""
+"If you did not request to change your password, please ignore this email."
+msgstr ""
+
+#: templates/email_templates/accounts/password_reset.html:24
+#: templates/email_templates/accounts/verify_account.html:24
+msgid "Thank you for choosing our service."
+msgstr ""
+
+#: templates/email_templates/accounts/verify_account.html:19
+msgid "Account Verification"
+msgstr ""
+
+#: templates/email_templates/accounts/verify_account.html:21
+msgid ""
+"Thank you for registering on our website. To complete your registration, "
+"please click the button below to verify your account:"
+msgstr ""
+
+#: templates/email_templates/accounts/verify_account.html:22
+msgid "Verify Your Account"
+msgstr ""
+
+#: templates/email_templates/accounts/verify_account.html:23
+msgid ""
+"If you did not create an account on our website, please ignore this email."
 msgstr ""

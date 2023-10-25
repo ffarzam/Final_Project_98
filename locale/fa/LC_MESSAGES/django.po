@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-21 22:18+0330\n"
-"PO-Revision-Date: 2023-10-21 11:58+0330\n"
-"Last-Translator: Anonymous User <farzam.pilaghaei@gmail.com>\n"
+"POT-Creation-Date: 2023-10-25 21:05+0330\n"
+"PO-Revision-Date: 2023-10-25 21:09+0330\n"
+"Last-Translator: Anonymous User <ffarzam_1992@yahoo.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -19,99 +19,148 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.9.9\n"
 
-#: accounts/models.py:15
+#: accounts/models.py:12
 msgid "Username"
 msgstr "نام کاربری"
 
-#: accounts/models.py:16
+#: accounts/models.py:13
 msgid "Email"
 msgstr "ایمیل"
 
-#: accounts/models.py:30
+#: accounts/models.py:28
 msgid "User"
 msgstr "کاربر"
 
-#: accounts/models.py:31
+#: accounts/models.py:29
 msgid "Users"
 msgstr "کاربر ها"
 
-#: accounts/models.py:45
+#: accounts/models.py:43
 msgid "Notification"
 msgstr "پیام"
 
-#: accounts/models.py:46
+#: accounts/models.py:44
 msgid "Notifications"
 msgstr "پیام ها"
 
-#: accounts/models.py:81
+#: accounts/models.py:79
 msgid "User Notification"
 msgstr "پیام های کار"
 
-#: accounts/models.py:82
+#: accounts/models.py:80
 msgid "User Notifications"
 msgstr "پیام های کاربر"
 
-#: accounts/models.py:96
+#: accounts/models.py:94
 msgid "User Last Activity"
 msgstr "اخرین فعالیت کاربر"
 
-#: accounts/models.py:97
+#: accounts/models.py:95
 msgid "Users Last Activity"
 msgstr "اخرین فعالیت کاربر ها "
 
-#: accounts/views.py:46
+#: accounts/serializers.py:27 accounts/serializers.py:107
+msgid "Username must be more than 6 characters long"
+msgstr "نام کاربری باید بیشتر از 6 حرف باشد"
+
+#: accounts/serializers.py:33 accounts/serializers.py:68
+#: accounts/serializers.py:158
+msgid "Passwords don't match"
+msgstr "گذرواژه ها یکسان نیستند"
+
+#: accounts/serializers.py:35 accounts/serializers.py:98
+msgid "Email and username can't be same"
+msgstr "ایمل و نام کاربری نباید یکسان باشد"
+
+#: accounts/serializers.py:37 accounts/serializers.py:72
+#: accounts/serializers.py:100 accounts/serializers.py:156
+msgid "Password and username can't be same"
+msgstr "گذر واژه و نام کاربری نباید یکسان باشد"
+
+#: accounts/serializers.py:39 accounts/serializers.py:70
+#: accounts/serializers.py:102 accounts/serializers.py:154
+msgid "Password and email can't be same"
+msgstr "گذر واژه و ایمیل نباید یکسان باشد"
+
+#: accounts/serializers.py:79
+msgid "Old password is not correct"
+msgstr "گذر واژه قدیمی صحیح نیست"
+
+#: accounts/serializers.py:127
+msgid "This email doesn't exist"
+msgstr "ایمیل شما وجود ندارد"
+
+#: accounts/serializers.py:161 accounts/serializers.py:179
+msgid "Token is not valid, please request again"
+msgstr "لینک معتبر نیست، لطفا دوباره درخواست دهید"
+
+#: accounts/views.py:47
 msgid "Registered successfully, activation link was sent to your email"
 msgstr "ثبت نام با موفقیت انجام شد، لینک فعال سازی به ایمیل شما ارسال شد"
 
-#: accounts/views.py:61 accounts/views.py:79
+#: accounts/views.py:62 accounts/views.py:80
 msgid "Your account has already activated"
 msgstr "اکانت شما فعال می باشد"
 
-#: accounts/views.py:66
+#: accounts/views.py:67
 msgid "A link Was Sent To You To Activate Your Account"
 msgstr "لینک فعال سازی اکانت برای شما ارسال شد"
 
-#: accounts/views.py:88
+#: accounts/views.py:89
 msgid "Your account has been activated successfully"
 msgstr "اکانت شما با موفقیت فعال شد"
 
-#: accounts/views.py:102
-msgid "Invalid Credentials"
-msgstr "هویت نامعتبر"
+#: accounts/views.py:103
+msgid "Invalid Username or Password"
+msgstr "نام کاربری یا گذر واژه نامعتبر است"
 
-#: accounts/views.py:104
+#: accounts/views.py:105
+msgid "User is Banned"
+msgstr "تا اطلاع ثانوی کاربر به حالت تعلیق در امده است"
+
+#: accounts/views.py:107
 msgid "User hasn't activated his/her account yet"
-msgstr ""
+msgstr "کاربر اکانت خود را فعال نکرده است"
 
-#: accounts/views.py:116
+#: accounts/views.py:118
 msgid "Logged in successfully"
 msgstr "با موفقیت وارد اکانت خود شدید"
 
-#: accounts/views.py:153
-#, fuzzy
-#| msgid "Logged in successfully"
+#: accounts/views.py:155
 msgid "Logged out successfully"
-msgstr "با موفقیت وارد اکانت خود شدید"
+msgstr "با موفقیت از اکانت خود خارج شدید"
 
-#: accounts/views.py:187
+#: accounts/views.py:189
 msgid "All accounts logged out"
 msgstr "از تمامی اکانت ها خارج شدید"
 
-#: accounts/views.py:204
+#: accounts/views.py:206
 msgid "Chosen account was successfully logged out"
 msgstr "از اکانت مورد نظر با موفقیت خارج شدید"
 
-#: accounts/views.py:229
+#: accounts/views.py:232
 msgid "Password has been successfully updated"
 msgstr "به روز رسانی رمز عبور شما با موفقیت انجام شد"
 
-#: accounts/views.py:256
+#: accounts/views.py:257
 msgid "A link Was Sent To You To Reset Your Password"
 msgstr "لینک تغییر گذر واژه برای شما ارسال شد"
 
-#: accounts/views.py:271
+#: accounts/views.py:272
 msgid "Password Reset Done"
 msgstr "گذرواژه بازنشانی شد"
+
+#: accounts/views.py:292
+msgid "All accounts logged out and disabled"
+msgstr "تمامی اکانت های کاربر مورد نظر غیر فعال شد"
+
+#: accounts/views.py:294 accounts/views.py:314
+msgid "No user with this specification was found"
+msgstr "کاربری با مشخصات وارد شده پیدا نشد"
+
+#: accounts/views.py:312
+msgid "User account is enabled"
+msgstr "اکانت کاربر مورد نظر فعال شد"
 
 #: config/custom_exception.py:8
 msgid "Access Token Has Been Expired"
@@ -229,37 +278,101 @@ msgstr "یادداشت"
 msgid "Comments"
 msgstr "یادداشت ها"
 
-#: interactions/models.py:46
-msgid "Subscription"
-msgstr "اشتراک"
-
-#: interactions/models.py:47
-msgid "Subscriptions"
-msgstr "اشتراک ها"
-
-#: interactions/models.py:60 interactions/models.py:61
+#: interactions/models.py:47 interactions/models.py:48
 msgid "Bookmark"
 msgstr "نشانه گذاری"
 
-#: interactions/models.py:74
+#: interactions/models.py:61
 msgid "Recommendation"
 msgstr "پیشنهاد"
 
-#: interactions/models.py:75
+#: interactions/models.py:62
 msgid "Recommendations"
 msgstr "پیشنهاد ها"
 
-#: interactions/models.py:87
+#: interactions/models.py:74
 msgid "Episode Trace"
 msgstr "دیابی پادکست"
 
-#: interactions/models.py:88
+#: interactions/models.py:75
 msgid "Episodes Trace"
 msgstr "ردیابی پادکست ها"
 
-#: interactions/models.py:99 interactions/models.py:100
+#: interactions/models.py:86 interactions/models.py:87
 msgid "Read News"
 msgstr "خبر های خوانده شده"
 
-#~ msgid "This email doesn't exist"
-#~ msgstr "ایمیل شما وجود ندارد"
+#: templates/email_templates/accounts/password_reset.html:19
+msgid "Reset Password"
+msgstr "بازنشانی گذر واژه"
+
+#: templates/email_templates/accounts/password_reset.html:20
+#: templates/email_templates/accounts/verify_account.html:20
+msgid "Hello"
+msgstr "سلام"
+
+#: templates/email_templates/accounts/password_reset.html:21
+msgid "Please click the button below to reset your password:"
+msgstr "لطفا برای بازنشانی گذر واژه بر روی لینک زیر کلیک کنید:"
+
+#: templates/email_templates/accounts/password_reset.html:22
+msgid "Reset Your Password"
+msgstr "باز نشانی گذر واژه شما"
+
+#: templates/email_templates/accounts/password_reset.html:23
+#| msgid ""
+#| "If you did not create an account on our website, please ignore this email."
+msgid ""
+"If you did not request to change your password, please ignore this email."
+msgstr ""
+"اگر درخواستی مبنی بر تغییر گذر واژه نداده اید، لطفاً این ایمیل را نادیده "
+"بگیرید."
+
+#: templates/email_templates/accounts/password_reset.html:24
+#: templates/email_templates/accounts/verify_account.html:24
+msgid "Thank you for choosing our service."
+msgstr "از اینکه خدمات ما را انتخاب کردید متشکریم"
+
+#: templates/email_templates/accounts/verify_account.html:19
+msgid "Account Verification"
+msgstr "تایید حساب کاربری"
+
+#: templates/email_templates/accounts/verify_account.html:21
+msgid ""
+"Thank you for registering on our website. To complete your registration, "
+"please click the button below to verify your account:"
+msgstr ""
+"با تشکر از شما برای ثبت نام در وب سایت ما. برای تکمیل ثبت نام، لطفا روی دکمه"
+" زیر کلیک کنید تا حساب خود را تأیید کنید:"
+
+#: templates/email_templates/accounts/verify_account.html:22
+msgid "Verify Your Account"
+msgstr "فعال سازی اکانت"
+
+#: templates/email_templates/accounts/verify_account.html:23
+msgid ""
+"If you did not create an account on our website, please ignore this email."
+msgstr ""
+"اگر حساب کاربری در وب سایت ما ایجاد نکردید، لطفاً این ایمیل را نادیده "
+"بگیرید."
+
+#, fuzzy
+#~ msgid "username"
+#~ msgstr "نام کاربری"
+
+#, fuzzy
+#~ msgid "email"
+#~ msgstr "ایمیل"
+
+#, fuzzy
+#~ msgid "password"
+#~ msgstr "بازنشانی گذر واژه"
+
+#~ msgid "Invalid Credentials"
+#~ msgstr "هویت نامعتبر"
+
+#~ msgid "Subscription"
+#~ msgstr "اشتراک"
+
+#~ msgid "Subscriptions"
+#~ msgstr "اشتراک ها"
