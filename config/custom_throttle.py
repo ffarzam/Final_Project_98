@@ -1,7 +1,7 @@
 from rest_framework import throttling
 
 
-class ExtendedAnonRateThrottle(throttling.AnonRateThrottle):
+class ExtendedAnonRateThrottle(throttling.UserRateThrottle):
     def parse_rate(self, rate):
 
         if rate is None:
