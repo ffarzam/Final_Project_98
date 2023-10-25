@@ -1,11 +1,8 @@
-import json
-
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django.db import models
-# from django_celery_beat.models import PeriodicTask
 
 from .manager import CustomManager
 from .utils import create_periodic_task, PeriodicTask
@@ -14,11 +11,12 @@ from .utils import create_periodic_task, PeriodicTask
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=25, verbose_name=_("Username"), unique=True)
     email = models.EmailField(verbose_name=_("Email"), unique=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True, editable=False)
     last_modify = models.DateTimeField(auto_now=True, editable=False)
+    is_account_enable = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
 
