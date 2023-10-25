@@ -7,12 +7,12 @@ import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 
-def publish(info):
+def publish(info, priority=1):
     connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.RABBITMQ_HOST))
     ch = connection.channel()
     routing_key = info["routing_key"]
     ch.queue_declare(queue=routing_key)
-    properties = pika.BasicProperties(delivery_mode=2)
+    properties = pika.BasicProperties(delivery_mode=2, priority=priority)
     ch.basic_publish(exchange='', routing_key=routing_key, body=json.dumps(info),
                      properties=properties)
     connection.close()
