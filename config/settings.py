@@ -60,10 +60,9 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
     'rosetta',
-    'minio_storage'
+    'minio_storage',
 
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -167,9 +166,9 @@ PASSWORD_RESET_TIMEOUT = 300  # 5 minutes
 
 REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
-        'reset_password': '1/300seconds',
-        'set_password': '1/min',
-        'verify_account': '1/300seconds',
+        'reset_password': '2/300seconds',
+        'set_password': '2/min',
+        'verify_account': '2/300seconds',
 
     },
 
@@ -249,10 +248,19 @@ LOGGING = {
             'host': ELASTICSEARCH_HOST,
             'port': ELASTICSEARCH_PORT,
         },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+        },
     },
     "loggers": {
         "elastic_logger": {
             "handlers": ["elasticsearch_handler"],
+            "level": "INFO",
+            'propagate': False
+        },
+        "celery": {
+            "handlers": ["console"],
             "level": "INFO",
             'propagate': False
         },
@@ -274,10 +282,9 @@ ELASTICSEARCH_DSL = {
     },
 }
 
-queue_name_list = ["login", "register", "activate", "rss_feed_update", "refresh", "logout", "logout_all",
+QUEUE_NAME_LIST = ["login", "register", "activate", "rss_feed_update", "refresh", "logout", "logout_all",
                    "selected_logout"]
-allowed_notification = ["login", "register", "rss_feed_update"]
-auth_allowed_notification = ["login", "register"]
+AUTH_ALLOWED_NOTIFICATION = ["login", "register"]
 
 DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
 STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
