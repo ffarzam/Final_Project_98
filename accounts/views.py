@@ -1,6 +1,7 @@
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import authenticate
 from django.core.cache import caches
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.generics import UpdateAPIView, GenericAPIView
@@ -17,7 +18,10 @@ from .authentication import AccessTokenAuthentication, RefreshTokenAuthenticatio
 from .tasks import send_link
 from .utils import cache_key_parser, publisher, set_token
 
-from config.custom_trottle import ResetPasswordRateThrottle, VerifyAccountRateThrottle, SetPasswordRateThrottle
+from config.custom_throttle import ResetPasswordRateThrottle, VerifyAccountRateThrottle, SetPasswordRateThrottle
+from config.settings import LANGUAGE_CODE
+
+from Permissions import IsSuperuser
 
 
 # Create your views here.
@@ -30,16 +34,13 @@ class UserRegister(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.POST)
         serializer.is_valid(raise_exception=True)
-        serializer.create(serializer.validated_data)
-        username = serializer.validated_data["username"]
-        user = CustomUser.objects.get(username=username)
+        user = serializer.create(serializer.validated_data)
         request.user = user
         current_site = get_current_site(request).domain
-
         send_link.delay(current_site, user.id, request.resolver_match.app_name, request.resolver_match.url_name,
-                        request.unique_id)
+                        request.META.get("HTTP_ACCEPT_LANGUAGE", LANGUAGE_CODE), request.unique_id)
 
-        message = f"User with {user.username} successfully registered"
+        message = f"User with id {user.id} successfully registered"
         routing_key = "register"
         publisher(request, user, message, routing_key)
 
@@ -48,7 +49,7 @@ class UserRegister(APIView):
                         status=status.HTTP_201_CREATED)
 
 
-class VerifyAccountResetView(APIView):
+class VerifyAccountRequestView(APIView):
     throttle_classes = [VerifyAccountRateThrottle]
     serializer_class = VerifyAccountResetSerializer
 
@@ -57,12 +58,12 @@ class VerifyAccountResetView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
         request.user = user
-        if user.is_active:
+        if user.is_account_enable:
             return Response({"message": _("Your account has already activated")}, status=status.HTTP_200_OK)
         current_site = get_current_site(request).domain
 
         send_link.delay(current_site, user.id, request.resolver_match.app_name, request.resolver_match.url_name,
-                        request.unique_id)
+                        request.META.get("HTTP_ACCEPT_LANGUAGE", LANGUAGE_CODE), request.unique_id)
         return Response({"message": _("A link Was Sent To You To Activate Your Account")}, status=status.HTTP_200_OK)
 
 
@@ -75,13 +76,13 @@ class VerifyAccount(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data
         request.user = user
-        if user.is_active:
+        if user.is_account_enable:
             return Response({"message": _("Your account has already activated")}, status=status.HTTP_200_OK)
 
-        user.is_active = True
+        user.is_account_enable = True
         user.save()
 
-        message = f"Account for {user.username} has been successfully activated"
+        message = f"Account for user {user.id} has been successfully activated"
         routing_key = "activate"
         publisher(request, user, message, routing_key)
 
@@ -99,15 +100,16 @@ class UserLogin(APIView):
         password = serializer.validated_data.get('password')
         user = authenticate(request, user_identifier=user_identifier, password=password)
         if user is None:
-            return Response({'message': _('Invalid Credentials')}, status=status.HTTP_400_BAD_REQUEST)
-        if not user.is_active:
-            return Response({'message': _("User hasn't activated his/her account yet")},
-                            status=455)
+            return Response({'message': _('Invalid Username or Password')}, status=status.HTTP_400_BAD_REQUEST)
+        elif not user.is_active:
+            return Response({'message': _("User is Banned")}, status=status.HTTP_404_NOT_FOUND)
+        elif not user.is_account_enable:
+            return Response({'message': _("User hasn't activated his/her account yet")}, status=455)
 
         access_token, refresh_token = set_token(request, user, caches)
         data = {"access": access_token, "refresh": refresh_token}
 
-        message = f"New Login Record for {user.username} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
+        message = f"New Login Record for user {user.id} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
         routing_key = "login"
         publisher(request, user, message, routing_key)
 
@@ -130,7 +132,7 @@ class RefreshToken(APIView):
         access_token, refresh_token = set_token(request, user, caches)
         data = {"access": access_token, "refresh": refresh_token}
 
-        message = f"New Login Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
+        message = f"Re_Login Record for user {user.id} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
         routing_key = "refresh"
         publisher(request, user, message, routing_key)
 
@@ -147,7 +149,7 @@ class LogoutView(APIView):
             user = request.user
             jti = payload["jti"]
             caches['auth'].delete(f'user_{user.id} || {jti}')
-            message = f"Logout Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
+            message = f"Logout Record for user {user.id} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
             routing_key = "logout"
             publisher(request, user, message, routing_key)
             return Response({"message": _("Logged out successfully")}, status=status.HTTP_200_OK)
@@ -181,7 +183,7 @@ class LogoutAll(APIView):
     def get(self, request):
         user = request.user
         caches['auth'].delete_many(caches['auth'].keys(f'user_{user.id} || *'))
-        message = f"Logout-all Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
+        message = f"Logout-all Record for user {user.id} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')}"
         routing_key = "logout_all"
         publisher(request, user, message, routing_key)
         return Response({"message": _("All accounts logged out")}, status=status.HTTP_200_OK)
@@ -197,7 +199,7 @@ class SelectedLogout(APIView):
         user_agent = caches['auth'].get(f'user_{user.id} || {jti}')
         caches['auth'].delete(f'user_{user.id} || {jti}')
 
-        message = f"Logout Record With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')} for session {user_agent}"
+        message = f"Selected logout Record for user {user.id} With {request.META.get('HTTP_USER_AGENT', 'UNKNOWN')} for session {user_agent}"
         routing_key = "selected_logout"
         publisher(request, user, message, routing_key)
 
@@ -226,6 +228,7 @@ class ChangePasswordView(UpdateAPIView):
         serializer = self.serializer_class(instance, data=request.data, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        caches['auth'].delete_many(caches['auth'].keys(f'user_{instance.id} || *'))
         return Response({"message": _("Password has been successfully updated")})
 
 
@@ -250,9 +253,7 @@ class PasswordResetRequestView(GenericAPIView):
         request.user = user
         current_site = get_current_site(request).domain
         send_link.delay(current_site, user.id, request.resolver_match.app_name, request.resolver_match.url_name,
-                        request.unique_id)
-        request.user = user
-
+                        request.META.get("HTTP_ACCEPT_LANGUAGE", LANGUAGE_CODE), request.unique_id)
         return Response({"message": _("A link Was Sent To You To Reset Your Password")}, status=status.HTTP_200_OK)
 
 
@@ -269,3 +270,45 @@ class SetNewPasswordView(GenericAPIView):
         user.save()
         request.user = user
         return Response({"success": _("Password Reset Done")}, status=status.HTTP_200_OK)
+
+
+class DisableAccount(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsSuperuser,)
+
+    def get(self, request, user_spec):
+
+        if user_spec.isnumeric():
+            user = CustomUser.objects.filter(id=user_spec)
+        else:
+            user = CustomUser.objects.filter(Q(username=user_spec) | Q(email=user_spec))
+
+        if user.exists():
+            user = user.get()
+            user.is_active = False
+            user.save()
+            caches['auth'].delete_many(caches['auth'].keys(f'user_{user.id} || *'))
+
+            return Response({"message": _("All accounts logged out and disabled")}, status=status.HTTP_200_OK)
+
+        return Response({"message": _("No user with this specification was found")}, status=status.HTTP_404_NOT_FOUND)
+
+
+class EnableAccount(APIView):
+    authentication_classes = (AccessTokenAuthentication,)
+    permission_classes = (IsSuperuser,)
+
+    def get(self, request, user_spec):
+        if user_spec.isnumeric():
+            user = CustomUser.objects.filter(id=user_spec)
+        else:
+            user = CustomUser.objects.filter(Q(username=user_spec) | Q(email=user_spec))
+
+        if user.exists():
+            user = user.get()
+            user.is_active = True
+            user.save()
+
+            return Response({"message": _("User account is enabled")}, status=status.HTTP_200_OK)
+
+        return Response({"message": _("No user with this specification was found")}, status=status.HTTP_404_NOT_FOUND)
