@@ -2,10 +2,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
 from .models import CustomUser
+from .utils import AccountActivationTokenGenerator
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -22,19 +24,19 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if len(value) < 6:
-            raise serializers.ValidationError('Username must be more than 6 characters long')
+            raise serializers.ValidationError(_('Username must be more than 6 characters long'))
 
         return value
 
     def validate(self, data):
         if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords don't match")
+            raise serializers.ValidationError(_("Passwords don't match"))
         if data['email'] == data['username']:
-            raise serializers.ValidationError("Email and username can't be same")
+            raise serializers.ValidationError(_("Email and username can't be same"))
         if data['password'] == data['username']:
-            raise serializers.ValidationError("Password and username can't be same")
+            raise serializers.ValidationError(_("Password and username can't be same"))
         if data['password'] == data['email']:
-            raise serializers.ValidationError("Password and email can't be same")
+            raise serializers.ValidationError(_("Password and email can't be same"))
 
         return data
 
@@ -63,18 +65,18 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords don't match")
+            raise serializers.ValidationError(_("Passwords don't match"))
         if user.email == data['password']:
-            raise serializers.ValidationError("Password and your email can't be same")
+            raise serializers.ValidationError(_("Password and email can't be same"))
         if data['password'] == user.username:
-            raise serializers.ValidationError("Password and your username can't be same")
+            raise serializers.ValidationError(_("Password and username can't be same"))
 
         return super().validate(data)
 
     def validate_old_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
-            raise serializers.ValidationError("Old password is not correct")
+            raise serializers.ValidationError(_("Old password is not correct"))
         return value
 
     def update(self, instance, validated_data):
@@ -93,16 +95,16 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         if data['email'] == data['username']:
-            raise serializers.ValidationError("Email and username can't be same")
+            raise serializers.ValidationError(_("Email and username can't be same"))
         if user.check_password(data['username']):
-            raise serializers.ValidationError("Password and username can't be same")
+            raise serializers.ValidationError(_("Password and username can't be same"))
         if user.check_password(data['email']):
-            raise serializers.ValidationError("Password and email can't be same")
+            raise serializers.ValidationError(_("Password and email can't be same"))
         return super().validate(data)
 
     def validate_username(self, value):
         if len(value) < 6:
-            raise serializers.ValidationError('Username must be more than 6 characters long')
+            raise serializers.ValidationError(_('Username must be more than 6 characters long'))
         return value
 
     def update(self, instance, validated_data):
@@ -122,7 +124,7 @@ class PasswordResetSerializer(serializers.Serializer):
         email = data["email"]
         user = CustomUser.objects.filter(email=email)
         if not user.exists():
-            raise serializers.ValidationError("This email doesn't exist")
+            raise serializers.ValidationError(_("This email doesn't exist"))
         return user.get()
 
 
@@ -149,14 +151,14 @@ class SetNewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(str(e))
 
         if user.email == password:
-            raise serializers.ValidationError("Password and your email can't be same")
+            raise serializers.ValidationError(_("Password and email can't be same"))
         if password == user.username:
-            raise serializers.ValidationError("Password and your username can't be same")
+            raise serializers.ValidationError(_("Password and username can't be same"))
         if data['password'] != data['password2']:
-            raise serializers.ValidationError("Passwords don't match")
+            raise serializers.ValidationError(_("Passwords don't match"))
 
         if not PasswordResetTokenGenerator().check_token(user, token):
-            raise serializers.ValidationError("Token is not valid, please request again")
+            raise serializers.ValidationError(_("Token is not valid, please request again"))
 
         return user, password
 
@@ -173,8 +175,8 @@ class AccountVerificationSerializer(serializers.Serializer):
             user = CustomUser.objects.get(id=user_id)
         except Exception as e:
             raise serializers.ValidationError(str(e))
-        if not PasswordResetTokenGenerator().check_token(user, token):
-            raise serializers.ValidationError("Token is not valid, please request again")
+        if not AccountActivationTokenGenerator().check_token(user, token):
+            raise serializers.ValidationError(_("Token is not valid, please request again"))
 
         return user
 
