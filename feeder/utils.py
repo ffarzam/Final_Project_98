@@ -18,7 +18,7 @@ class ChannelPagination(PageNumberPagination):
 
 
 class ItemsPagination(PageNumberPagination):
-    page_size = 20
+    page_size = 5
 
 
 def search_counter(channel_id_set):

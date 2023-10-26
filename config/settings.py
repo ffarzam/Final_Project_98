@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
-import time
+from django.utils.translation import gettext_lazy as _
 
 from celery.schedules import crontab
 from pathlib import Path
@@ -27,9 +27,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+LANGUAGES = [
+    ("fa", _("Persian")),
+    ("en", _("English")),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale'
+]
+# CSRF_TRUSTED_ORIGINS = ["*"]
+ALLOWED_HOSTS = ["localhost"]
 
 # Application definition
 
@@ -50,18 +59,20 @@ INSTALLED_APPS = [
     'elasticsearch_dsl',
     'django_elasticsearch_dsl',
     'django_elasticsearch_dsl_drf',
+    'rosetta',
+    'minio_storage',
 
 ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'accounts.custom_middleware.ElasticAPILoggerMiddleware'
+    'config.custom_middleware.ElasticAPILoggerMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -69,7 +80,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,6 +88,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
             ],
         },
     },
@@ -119,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'Asia/Tehran'
 
@@ -129,9 +141,14 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
-STATIC_URL = 'static/'
-# STATIC_ROOT = 'staticfiles'
+MEDIA_URL = "/media/"
+# STATIC_URL = 'static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+STATIC_ROOT = './staticfiles/'
+# STATICFILES_DIRS = [
+#     BASE_DIR / "staticfiles",
+# ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -145,10 +162,15 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+PASSWORD_RESET_TIMEOUT = 300  # 5 minutes
+
 REST_FRAMEWORK = {
-    # 'DEFAULT_AUTHENTICATION_CLASSES': (
-    #     'accounts.authentication.CustomJWTAuthentication',
-    # ),
+    'DEFAULT_THROTTLE_RATES': {
+        'reset_password': '2/300seconds',
+        'set_password': '2/min',
+        'verify_account': '2/300seconds',
+
+    },
 
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -193,16 +215,12 @@ CACHES = {
 
 }
 
-# SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-# SESSION_CACHE_ALIAS = "default"
-
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT')
 RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD')
 
 CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}'
-# CELERY_BROKER_URL = f'redis://{REDIS_HOST}/4'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}/3'
 CELERY_TIMEZONE = 'Asia/Tehran'
 CELERY_WORKER_CONCURRENCY = 5
@@ -225,11 +243,14 @@ LOGGING = {
 
     'handlers': {
         'elasticsearch_handler': {
-            'level': 'DEBUG',  # Set the desired log level.
+            'level': 'INFO',
             'class': 'config.elastic_log_handler.ElasticsearchHandler',
             'host': ELASTICSEARCH_HOST,
             'port': ELASTICSEARCH_PORT,
-
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
         },
     },
     "loggers": {
@@ -238,11 +259,14 @@ LOGGING = {
             "level": "INFO",
             'propagate': False
         },
+        "celery": {
+            "handlers": ["console"],
+            "level": "INFO",
+            'propagate': False
+        },
 
     },
 }
-
-PASSWORD_RESET_TIMEOUT = 5 * 60  # 5 min
 
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL")
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND")
@@ -258,6 +282,28 @@ ELASTICSEARCH_DSL = {
     },
 }
 
-queue_name_list = ["login", "register", "rss_feed_update", "refresh", "logout", "logout_all", "selected_logout"]
-allowed_notification = ["login", "register", "rss_feed_update"]
-auth_allowed_notification = ["login", "register"]
+QUEUE_NAME_LIST = ["login", "register", "activate", "rss_feed_update", "refresh", "logout", "logout_all",
+                   "selected_logout"]
+AUTH_ALLOWED_NOTIFICATION = ["login", "register"]
+
+DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
+STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
+MINIO_STORAGE_ENDPOINT = 'minio:9000'
+MINIO_EXTERNAL_STORAGE_ENDPOINT = "http://127.0.0.1:9000"
+
+MINIO_STORAGE_ACCESS_KEY = os.environ.get("MINIO_ROOT_USER")
+MINIO_STORAGE_SECRET_KEY = os.environ.get("MINIO_ROOT_PASSWORD")
+MINIO_STORAGE_USE_HTTPS = False
+
+MINIO_STORAGE_MEDIA_OBJECT_METADATA = {"Cache-Control": "max-age=1000"}
+MINIO_STORAGE_MEDIA_BACKUP_BUCKET = 'Recycle Bin'
+MINIO_STORAGE_MEDIA_BACKUP_FORMAT = '%c/'
+
+MINIO_STORAGE_MEDIA_BUCKET_NAME = 'local-media'
+MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = True
+
+MINIO_STORAGE_STATIC_BUCKET_NAME = 'local-static'
+MINIO_STORAGE_AUTO_CREATE_STATIC_BUCKET = True
+
+MINIO_STORAGE_STATIC_URL = f'{MINIO_EXTERNAL_STORAGE_ENDPOINT}/{MINIO_STORAGE_STATIC_BUCKET_NAME}'
+MINIO_STORAGE_MEDIA_URL = f'{MINIO_EXTERNAL_STORAGE_ENDPOINT}/{MINIO_STORAGE_MEDIA_BUCKET_NAME}'

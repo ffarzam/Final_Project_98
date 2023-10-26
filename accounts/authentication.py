@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import jwt
 from django.contrib.auth.backends import ModelBackend
 from rest_framework.authentication import BaseAuthentication
-from . import custom_exception
+from config import custom_exception
 from .models import CustomUser
 from .utils import decode_jwt
 from django.core.cache import caches
@@ -114,7 +114,7 @@ class AuthBackend(ModelBackend):
             except CustomUser.DoesNotExist:
                 return None
 
-        if user.check_password(password) and user.is_active:
+        if user.check_password(password):
             return user
         else:
             return None

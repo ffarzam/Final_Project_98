@@ -3,13 +3,21 @@ import logging
 import os
 
 from celery import Celery, Task
-from celery.worker.request import Request
+from celery.signals import setup_logging
 
 logger = logging.getLogger('elastic_logger')
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
+
+
+@setup_logging.connect
+def config_loggers(*args, **kwargs):
+    from logging.config import dictConfig
+    from django.conf import settings
+    dictConfig(settings.LOGGING)
+
 
 app.autodiscover_tasks()
 
