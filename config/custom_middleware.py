@@ -16,8 +16,12 @@ class ElasticAPILoggerMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        unique_id = uuid4().hex
+        unique_id = request.headers.get("unique_id")
+
+        if not unique_id:
+            unique_id = uuid4().hex
         setattr(request, "unique_id", unique_id)
+
         path_blacklist = self.get_blacklist(request)
         response = self.get_response(request)
         if len(path_blacklist) == 0 and not request.META.get("exception", False):
