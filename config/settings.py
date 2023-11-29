@@ -38,7 +38,8 @@ LOCALE_PATHS = [
     BASE_DIR / 'locale'
 ]
 # CSRF_TRUSTED_ORIGINS = ["*"]
-ALLOWED_HOSTS = ["localhost"]
+# ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
