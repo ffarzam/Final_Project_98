@@ -68,7 +68,14 @@ def update_single_rss(self, xml_link, unique_id=None):
                     "message": f"Channel {channel.title} Has Been Updated",
                     "routing_key": "rss_feed_update"
                 }
+                notification_microservice_info = {
+                    "unique_id": unique_id,
+                    "channel_id": channel.id,
+                    "channel_title": channel.title,
+                    "routing_key": "notification_rss_feed_update"
+                }
                 publish(info)
+                publish(notification_microservice_info)
             return {"Message": f"Channel {channel.title} Has Been Updated"}
 
         return {"Message": f"Channel {channel.title} is Already Updated"}
